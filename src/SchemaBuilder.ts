@@ -26,7 +26,6 @@ export class SchemaBuilder {
   registerModels(...models: [new () => any]) {
     for (const model of models) {
       const modelInstance = new model();
-      console.log(Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance));
       if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
         const modelType = getGraphQLModel(modelInstance);
         this.modelTypesResolver[model.name.toLowerCase()] = model;

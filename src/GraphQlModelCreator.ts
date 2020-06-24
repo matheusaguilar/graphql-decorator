@@ -46,24 +46,26 @@ function defineFK(target: any, key: any) {
   const type = new classType();
   const typeList = new graphqlTypes.GraphQLList(getGraphQLModel(type));
   const resolver = async (arg) => {
-    let fkId = null;
+    console.log(arg);
 
-    // if response from database
-    if (arg[nameFkColumn]) {
-      fkId = arg[nameFkColumn];
-    }
+    // let fkId = null;
 
-    Object.keys(type).forEach((prop) => {
-      if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, type, prop)) {
-        // fkId in object
-        if (fkId) {
-          type[prop] = fkId;
-          // fkId in toGraphQL() object
-        } else if (arg[key]) {
-          type[prop] = arg[key][Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, type, prop)];
-        }
-      }
-    });
+    // // if response from database
+    // if (arg[nameFkColumn]) {
+    //   fkId = arg[nameFkColumn];
+    // }
+
+    // Object.keys(type).forEach((prop) => {
+    //   if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, type, prop)) {
+    //     // fkId in object
+    //     if (fkId) {
+    //       type[prop] = fkId;
+    //       // fkId in toGraphQL() object
+    //     } else if (arg[key]) {
+    //       type[prop] = arg[key][Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, type, prop)];
+    //     }
+    //   }
+    // });
 
     return type;
     // return (await ORM.getInstance(type).read()) ? type.toGraphQL() : [];
