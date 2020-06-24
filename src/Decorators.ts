@@ -1,7 +1,3 @@
-import * as graphqlTypes from 'graphql';
-import { graphQLgetType } from './GraphQlType';
-import { getGraphQLBasicType } from './GraphQlType';
-
 const reflectPrefix = 'graphql_decorators';
 export const GRAPHQL_MODEL_ENTITY = `${reflectPrefix}_entity`;
 export const GRAPHQL_MODEL_PK = `${reflectPrefix}_pk`;
@@ -74,16 +70,7 @@ export function graphQlFk(name?: string) {
  * @param isArray define if is array return
  */
 function defineReturnType(target: any, key: any, type: any) {
-  if (Array.isArray(type)) {
-    Reflect.defineMetadata(
-      GRAPHQL_RESOLVER_RETURN,
-      new graphqlTypes.GraphQLList(graphQLgetType(new type[0]())),
-      target,
-      key
-    );
-  } else {
-    Reflect.defineMetadata(GRAPHQL_RESOLVER_RETURN, graphQLgetType(new type()), target, key);
-  }
+  Reflect.defineMetadata(GRAPHQL_RESOLVER_RETURN, type, target, key);
 }
 
 /**
@@ -93,7 +80,6 @@ function defineReturnType(target: any, key: any, type: any) {
 export function graphQlQuery(args: GraphQLQueryMutationArg) {
   return (target: any, key: string): any => {
     Reflect.defineMetadata(GRAPHQL_RESOLVER_QUERY, args.name ? name : key, target, key);
-    Reflect.defineMetadata(GRAPHQL_RESOLVER_RETURN, getGraphQLBasicType('string'), target, key);
     defineReturnType(target, key, args.return);
   };
 }

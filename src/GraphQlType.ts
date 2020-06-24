@@ -1,5 +1,4 @@
 import * as graphqlTypes from 'graphql';
-import { getGraphQLModel } from './GraphQlModelCreator';
 
 /**
  * Define types name and return the GraphQlType
@@ -8,6 +7,21 @@ const basicTypesMap = {
     string: graphqlTypes.GraphQLString,
     number: graphqlTypes.GraphQLFloat,
     boolean: graphqlTypes.GraphQLBoolean
+}
+
+/**
+ * return if a type is graphQL scalar, the basic types, int, string, boolean.
+ * @param type
+ */
+export function isGraphQLscalarType(type) {
+  switch (type) {
+    case graphqlTypes.GraphQLFloat:
+    case graphqlTypes.GraphQLString:
+    case graphqlTypes.GraphQLBoolean:
+      return true;
+    default:
+      return false;
+  }
 }
 
 /**
@@ -21,27 +35,4 @@ export function getGraphQLBasicType(type) {
         console.error('GraphQL: GraphQLType Error: type isnt basic type.');
     }
     return null;
-}
-
-/**
- * get graphQL object type.
- * @param type
- */
-export function graphQLgetType(type, resolver?: any) {
-    if (typeof type === 'string') {
-        return getGraphQLBasicType(type);
-    } else {
-      const name = type.constructor.name.toLowerCase();
-      if (basicTypesMap[name]) {
-        return getGraphQLBasicType(name);
-      } else {
-        const modelType = getGraphQLModel(type);
-        if (modelType) {
-          return modelType;
-        } else {
-          console.error('GraphQL Meta: no type was defined in graphQLgetType.');
-          return null;
-        }
-      }
-    }
 }

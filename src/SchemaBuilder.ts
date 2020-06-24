@@ -6,6 +6,7 @@ import {
     GRAPHQL_RESOLVER_NEXT,
     GRAPHQL_RESOLVER_RETURN
 } from './Decorators';
+import { getGraphQLBasicType, isGraphQLscalarType } from './GraphQlType';
 import { getGraphQLModel } from './GraphQlModelCreator';
 import { FillModelUtil } from './FillModelUtil';
 
@@ -96,6 +97,53 @@ export class SchemaBuilder {
   }
 
   /**
+   * define the return type for queries and mutations.
+   * @param resolver the resolver class.
+   * @param method the method of resolver (query or mutation)
+   */
+  private defineReturnType(resolver, method) {
+    if (Reflect.hasMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method)) {
+      let typeReturn = Reflect.getMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method);
+      if (Array.isArray(typeReturn)) {
+        return new graphqlTypes.GraphQLList(getGraphQLModel(new typeReturn[0]()));
+      } else {
+        return getGraphQLModel(new typeReturn());
+      }
+    }
+    console.error(`GraphQL: Schema: Error at ${resolver.constructor.name} in method ${method}, no returnType defined.`);
+    return null;
+  }
+
+  /**
+   * return the array of arguments to be called with resolver method.
+   * @param hasArgs 
+   * @param args 
+   * @param resolver 
+   * @param method 
+   * @param context 
+   */
+  private getResolverArgsArray(hasArgs , args, resolver, method, context) {
+    const argsAsArray = [];
+    if (hasArgs) {
+      const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
+      Object.keys(args).forEach((arg, index) => {
+        if (!getGraphQLBasicType(pArgs[index].name)) {
+          argsAsArray.push(
+            FillModelUtil.fillModelFromRequest(
+              args[arg],
+              this.getModelForFillAsArg(pArgs[index].name.toLowerCase())
+            )
+          );
+        } else {
+          argsAsArray.push(args[arg]);
+        }
+      });
+    }
+    argsAsArray.push(context);
+    return argsAsArray;
+  }
+
+  /**
    * create queries for every resolver.
    * @param resolver the resolver.
    * @param modelType the modelType of resolver.
@@ -111,13 +159,7 @@ export class SchemaBuilder {
 
         queryFields[queryName] = {};
         // add return type
-        if (Reflect.hasMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method)) {
-          queryFields[queryName].type = Reflect.getMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method);
-        } else {
-          console.error(
-            `GraphQL: Schema: Error at ${resolver.constructor.name} in method ${method}, no returnType defined.`
-          );
-        }
+        queryFields[queryName].type = this.defineReturnType(resolver, method);
 
         // add args params
         if (hasArgs) {
@@ -126,28 +168,10 @@ export class SchemaBuilder {
 
         // execute the function in resolver to return a response for graphql
         queryFields[queryName].resolve = (_, args, context) => {
-          // validate next functions
           if (this.validateNextFunctions(resolver, method, context)) {
-            const argsAsArray = [];
-            if (hasArgs) {
-              const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
-              Object.keys(args).forEach((arg, index) => {
-                if (!this.graphQLgetArgType(pArgs[index].name)) {
-                  argsAsArray.push(
-                    FillModelUtil.fillModelFromRequest(
-                      args[arg],
-                      this.getModelForFillAsArg(pArgs[index].name.toLowerCase())
-                    )
-                  );
-                } else {
-                  argsAsArray.push(args[arg]);
-                }
-              });
-            }
-            argsAsArray.push(context);
+            const argsAsArray = this.getResolverArgsArray(hasArgs, args, resolver, method, context);
             return resolver[method].apply(resolver, argsAsArray);
           }
-
           return null;
         };
       }
@@ -173,13 +197,7 @@ export class SchemaBuilder {
 
         mutationFields[queryName] = {};
         // add return type
-        if (Reflect.hasMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method)) {
-          mutationFields[queryName].type = Reflect.getMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method);
-        } else {
-          console.error(
-            `GraphQL: Schema: Error at ${resolver.constructor.name} in method ${method}, no returnType defined.`
-          );
-        }
+        mutationFields[queryName].type = this.defineReturnType(resolver, method);
 
         // add args params
         if (hasArgs) {
@@ -188,25 +206,8 @@ export class SchemaBuilder {
 
         // execute the function in resolver to return a response for graphql
         mutationFields[queryName].resolve = (_, args, context) => {
-          // validate next functions
           if (this.validateNextFunctions(resolver, method, context)) {
-            const argsAsArray = [];
-            if (hasArgs) {
-              const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
-              Object.keys(args).forEach((arg, index) => {
-                if (!this.graphQLgetArgType(pArgs[index].name)) {
-                  argsAsArray.push(
-                    FillModelUtil.fillModelFromRequest(
-                      args[arg],
-                      this.getModelForFillAsArg(pArgs[index].name.toLowerCase())
-                    )
-                  );
-                } else {
-                  argsAsArray.push(args[arg]);
-                }
-              });
-            }
-            argsAsArray.push(context);
+            const argsAsArray = this.getResolverArgsArray(hasArgs, args, resolver, method, context);
             return resolver[method].apply(resolver, argsAsArray);
           }
           return null;
@@ -278,7 +279,7 @@ export class SchemaBuilder {
       if (pArgs[index].name.toLowerCase() !== 'ResContext'.toLowerCase()) {
         // not ResContext
         const modelInputType = getGraphQLModel(new pArgs[index]());
-        const type = this.graphQLgetArgType(pArgs[index].name);
+        const type = getGraphQLBasicType(pArgs[index].name);
         args[arg] = {
           type: type ? type : this.getModelTypeForResolver(modelInputType),
         };
@@ -316,7 +317,7 @@ export class SchemaBuilder {
         for (const key of Object.keys(modelType.getFields())) {
           let type = null;
 
-          if (this.isGraphQLscalarType(modelType.getFields()[key].type)) {
+          if (isGraphQLscalarType(modelType.getFields()[key].type)) {
             type = modelType.getFields()[key].type;
           } else {
             type = this.createModelTypeInput(modelType.getFields()[key].type);
@@ -340,37 +341,6 @@ export class SchemaBuilder {
     }
 
     return null;
-  }
-
-  /**
-   * define type for function arguments in queries or mutations.
-   * @param type the type to check.
-   */
-  private graphQLgetArgType(type) {
-    switch (type.toLowerCase()) {
-      case 'string':
-        return graphqlTypes.GraphQLString;
-      case 'number':
-        return graphqlTypes.GraphQLFloat;
-      case 'boolean':
-        return graphqlTypes.GraphQLBoolean;
-      default:
-        return undefined;
-    }
-  }
-
-  /**
-   * return if a type is graphQL scalar, the basic types, int, string, boolean.
-   */
-  private isGraphQLscalarType(type) {
-    switch (type) {
-      case graphqlTypes.GraphQLFloat:
-      case graphqlTypes.GraphQLString:
-      case graphqlTypes.GraphQLBoolean:
-        return true;
-      default:
-        return false;
-    }
   }
 
   /**
