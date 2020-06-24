@@ -9,7 +9,7 @@ import {
 
 const reflectPrefix = 'graphql_model_creator';
 const GRAPHQL_TYPE = `${reflectPrefix}_type`;
-const GRAPHQL_RESOLVE = `${reflectPrefix}_resolve`;
+const GRAPHQL_FK = `${reflectPrefix}_type_fk`;
 const graphQLModelTypes = {};
 
 /**
@@ -48,41 +48,51 @@ function defineColumn(target: any, key: any) {
 function defineFK(target: any, key: any) {
   const classType: any = Reflect.getMetadata('design:type', target, key);
   const nameFkColumn: any = Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, target, key);
-  const type = new classType();
-  const typeList = new graphqlTypes.GraphQLList(getGraphQLModel(type));
-  const resolver = async (arg) => {
-    // console.log(arg);
+  Reflect.defineMetadata(GRAPHQL_FK, nameFkColumn, target, key);
+  Reflect.defineMetadata(GRAPHQL_TYPE, classType, target, key);
 
-    // let fkId = null;
+  // const classType: any = Reflect.getMetadata('design:type', target, key);
+  // const nameFkColumn: any = Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, target, key);
+  // const type = new classType();
+  // const typeList = new graphqlTypes.GraphQLList(getGraphQLModel(type));
+  // const resolver = async (arg) => {
+  // console.log(arg);
 
-    // // if response from database
-    // console.log(arg[nameFkColumn]);
-    // if (arg[nameFkColumn]) {
-    //   fkId = arg[nameFkColumn];
-    // }
+  // let fkId = null;
 
-    // Object.keys(type).forEach((prop) => {
-    //   if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, type, prop)) {
-    //     console.log(arg[key]);
-    //     console.log(Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, type, prop));
-    //     // fkId in object
-    //     if (fkId) {
-    //       type[prop] = fkId;
-    //       // fkId in toGraphQL() object
-    //     } else if (arg[key]) {
-    //       type[prop] = arg[key][Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, type, prop)];
-    //     }
-    //   }
-    // });
+  // // if response from database
+  // console.log(arg[nameFkColumn]);
+  // if (arg[nameFkColumn]) {
+  //   fkId = arg[nameFkColumn];
+  // }
 
-    // console.log(type);
+  // Object.keys(type).forEach((prop) => {
+  //   if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, type, prop)) {
+  //     console.log(arg[key]);
+  //     console.log(Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, type, prop));
+  //     // fkId in object
+  //     if (fkId) {
+  //       type[prop] = fkId;
+  //       // fkId in toGraphQL() object
+  //     } else if (arg[key]) {
+  //       type[prop] = arg[key][Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, type, prop)];
+  //     }
+  //   }
+  // });
 
-    console.log(arg[nameFkColumn]);
-    return [arg[nameFkColumn]];
-    // return (await ORM.getInstance(type).read()) ? type.toGraphQL() : [];
-  };
-  Reflect.defineMetadata(GRAPHQL_TYPE, typeList, target, key);
-  Reflect.defineMetadata(GRAPHQL_RESOLVE, resolver, target, key);
+  // console.log(type);
+
+  // console.log(arg[nameFkColumn]);
+  // return [arg[nameFkColumn]];
+  // return (await ORM.getInstance(type).read()) ? type.toGraphQL() : [];
+  // };
+  // Reflect.defineMetadata(GRAPHQL_TYPE, typeList, target, key);
+  // Reflect.defineMetadata(GRAPHQL_RESOLVE, resolver, target, key);
+}
+
+function resolver(arg, key) {
+  console.log(arg[key]);
+  return [arg[key]];
 }
 
 /**
@@ -114,18 +124,33 @@ export function getGraphQLModel(instance): graphqlTypes.GraphQLObjectType {
       for (const key of Object.keys(instance)) {
         // get properties metadata
         if (Reflect.hasMetadata(GRAPHQL_TYPE, instance, key)) {
-          if (
-            Reflect.getMetadata(GRAPHQL_TYPE, instance, key) instanceof graphqlTypes.GraphQLList
-          ) {
-            const fkType = Reflect.getMetadata(GRAPHQL_TYPE, instance, key);
+          if (Reflect.hasMetadata(GRAPHQL_FK, instance, key)) {
+            const keyName = Reflect.getMetadata(GRAPHQL_FK, instance, key);
+            const fkTypeClass = Reflect.getMetadata(GRAPHQL_TYPE, instance, key);
+            const fkType = new graphqlTypes.GraphQLList(getGraphQLModel(new fkTypeClass()));
             type.fields[key] = {
               type: fkType.ofType,
-              resolve: Reflect.getMetadata(GRAPHQL_RESOLVE, instance, key),
+              resolve: (arg) => {
+                return resolver(arg, keyName);
+              },
             };
           } else {
             type.fields[key] = {};
             type.fields[key].type = Reflect.getMetadata(GRAPHQL_TYPE, instance, key);
           }
+          // if (
+          //   Reflect.getMetadata(GRAPHQL_TYPE, instance, key) instanceof graphqlTypes.GraphQLList
+          // ) {
+          //   const fkType = Reflect.getMetadata(GRAPHQL_TYPE, instance, key);
+          //   type.fields[key] = {
+          //     type: fkType.ofType,
+          //     // resolve: Reflect.getMetadata(GRAPHQL_RESOLVE, instance, key),
+          //     resolve:
+          //   };
+          // } else {
+          //   type.fields[key] = {};
+          //   type.fields[key].type = Reflect.getMetadata(GRAPHQL_TYPE, instance, key);
+          // }
         }
       }
 
