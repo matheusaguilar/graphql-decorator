@@ -1,6 +1,11 @@
 import * as graphqlTypes from 'graphql';
 import { getGraphQLBasicType } from './GraphQlType';
-import { GRAPHQL_MODEL_ENTITY, GRAPHQL_MODEL_PK, GRAPHQL_MODEL_COLUMN, GRAPHQL_MODEL_FK} from './Decorators';
+import {
+  GRAPHQL_MODEL_ENTITY,
+  GRAPHQL_MODEL_PK,
+  GRAPHQL_MODEL_COLUMN,
+  GRAPHQL_MODEL_FK,
+} from './Decorators';
 
 const reflectPrefix = 'graphql_model_creator';
 const GRAPHQL_TYPE = `${reflectPrefix}_type`;
@@ -9,12 +14,12 @@ const graphQLModelTypes = {};
 
 /**
  * get the target type and return the GraphQL type.
- * @param target 
- * @param arg 
+ * @param target
+ * @param arg
  */
 function getGraphQLType(target, arg) {
-    const type = Reflect.getMetadata('design:type', target, arg);
-    return getGraphQLBasicType(type?.name);
+  const type = Reflect.getMetadata('design:type', target, arg);
+  return getGraphQLBasicType(type?.name);
 }
 
 /**

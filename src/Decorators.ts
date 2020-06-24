@@ -23,7 +23,7 @@ interface GraphQLQueryMutationArg {
 export function graphQlModel(name?: string) {
   return (target: any) => {
     Reflect.defineMetadata(GRAPHQL_MODEL_ENTITY, name ? name : target.name, target.prototype);
-  }
+  };
 }
 
 /**
@@ -32,10 +32,10 @@ export function graphQlModel(name?: string) {
  * @param key
  */
 export function graphQlPk(name?: string) {
-  return (target : any, key : string) : any => {
+  return (target: any, key: string): any => {
     Reflect.defineMetadata(GRAPHQL_MODEL_PK, true, target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, name ? name : key, target, key);
-  }
+  };
 }
 
 /**
@@ -44,9 +44,9 @@ export function graphQlPk(name?: string) {
  * @param key
  */
 export function graphQlColumn(name?: string) {
-  return (target : any, key : string) : any => {
+  return (target: any, key: string): any => {
     Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, name ? name : key, target, key);
-  }
+  };
 }
 
 /**
@@ -55,11 +55,11 @@ export function graphQlColumn(name?: string) {
  * @param key
  */
 export function graphQlFk(name?: string) {
-  return (target : any, key : string) : any => {
+  return (target: any, key: string): any => {
     const classType: any = Reflect.getMetadata('design:type', target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_FK, classType, target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, name ? name : key, target, key);
-  }
+  };
 }
 
 /**
@@ -79,7 +79,7 @@ function defineReturnType(target: any, key: any, type: any) {
  */
 export function graphQlQuery(args: GraphQLQueryMutationArg) {
   return (target: any, key: string): any => {
-    Reflect.defineMetadata(GRAPHQL_RESOLVER_QUERY, args.name ? name : key, target, key);
+    Reflect.defineMetadata(GRAPHQL_RESOLVER_QUERY, args.name ? args.name : key, target, key);
     defineReturnType(target, key, args.return);
   };
 }
@@ -90,7 +90,7 @@ export function graphQlQuery(args: GraphQLQueryMutationArg) {
  */
 export function graphQlMutation(args: GraphQLQueryMutationArg) {
   return (target: any, key: string): any => {
-    Reflect.defineMetadata(GRAPHQL_RESOLVER_MUTATION, name ? name : key, target, key);
+    Reflect.defineMetadata(GRAPHQL_RESOLVER_MUTATION, args.name ? args.name : key, target, key);
     defineReturnType(target, key, args.return);
   };
 }

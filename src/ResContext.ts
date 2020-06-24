@@ -1,4 +1,4 @@
 export class ResContext {
-    req: any;
-    res: any;
+  req: any;
+  res: any;
 }

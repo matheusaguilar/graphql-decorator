@@ -1,10 +1,10 @@
 import * as graphqlTypes from 'graphql';
 import {
-    GRAPHQL_MODEL_ENTITY,
-    GRAPHQL_RESOLVER_QUERY,
-    GRAPHQL_RESOLVER_MUTATION,
-    GRAPHQL_RESOLVER_NEXT,
-    GRAPHQL_RESOLVER_RETURN
+  GRAPHQL_MODEL_ENTITY,
+  GRAPHQL_RESOLVER_QUERY,
+  GRAPHQL_RESOLVER_MUTATION,
+  GRAPHQL_RESOLVER_NEXT,
+  GRAPHQL_RESOLVER_RETURN,
 } from './Decorators';
 import { getGraphQLBasicType, isGraphQLscalarType } from './GraphQlType';
 import { getGraphQLModel } from './GraphQlModelCreator';
@@ -16,7 +16,7 @@ export class SchemaBuilder {
   private inputModelTypes = {};
   private resolverModelFunction = null;
 
-  constructor(resolver: (model: any) => any){
+  constructor(resolver: (model: any) => any) {
     this.resolverModelFunction = resolver;
   }
 
@@ -58,8 +58,8 @@ export class SchemaBuilder {
 
     // create graphQL object for every resolver with query and mutation types
     for (const resolver of this.resolverInstances) {
-        queryPromises.push(this.createQueries(resolver));
-        mutationPromises.push(this.createMutations(resolver));
+      queryPromises.push(this.createQueries(resolver));
+      mutationPromises.push(this.createMutations(resolver));
     }
 
     // fetch all queries
@@ -110,19 +110,21 @@ export class SchemaBuilder {
         return getGraphQLModel(new typeReturn());
       }
     }
-    console.error(`GraphQL: Schema: Error at ${resolver.constructor.name} in method ${method}, no returnType defined.`);
+    console.error(
+      `GraphQL: Schema: Error at ${resolver.constructor.name} in method ${method}, no returnType defined.`
+    );
     return null;
   }
 
   /**
    * return the array of arguments to be called with resolver method.
-   * @param hasArgs 
-   * @param args 
-   * @param resolver 
-   * @param method 
-   * @param context 
+   * @param hasArgs
+   * @param args
+   * @param resolver
+   * @param method
+   * @param context
    */
-  private getResolverArgsArray(hasArgs , args, resolver, method, context) {
+  private getResolverArgsArray(hasArgs, args, resolver, method, context) {
     const argsAsArray = [];
     if (hasArgs) {
       const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
