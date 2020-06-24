@@ -9,7 +9,7 @@ export declare class SchemaBuilder {
      * register all the models that will be used in the system.
      * @param models
      */
-    registerModels(...models: any): this;
+    registerModels(...models: [new () => any]): this;
     /**
      * register all the resolvers for graphQL.
      * @param resolvers the resolvers classes.

@@ -1,5 +1,5 @@
-// import * as graphqlTypes from 'graphql';
-// import { graphQLgetType } from './GraphQlType';
+import * as graphqlTypes from 'graphql';
+import { graphQLgetType } from './GraphQlType';
 import { getGraphQLBasicType } from './GraphQlType';
 
 const reflectPrefix = 'graphql_decorators';
@@ -16,11 +16,8 @@ export const GRAPHQL_RESOLVER_NEXT = `${reflectPrefix}_next`;
  * Arguments for query and mutation decorator.
  */
 interface GraphQLQueryMutationArg {
+  return: any;
   name?: string;
-  return: {
-    type: any;
-    isArray?: boolean;
-  };
 }
 
 /**
@@ -76,18 +73,18 @@ export function graphQlFk(name?: string) {
  * @param type the type of return
  * @param isArray define if is array return
  */
-// function defineReturnType(target: any, key: any, type: any, isArray?: boolean) {
-//   if (isArray) {
-//     Reflect.defineMetadata(
-//       GRAPHQL_RESOLVER_RETURN,
-//       new graphqlTypes.GraphQLList(graphQLgetType(new type())),
-//       target,
-//       key
-//     );
-//   } else {
-//     Reflect.defineMetadata(GRAPHQL_RESOLVER_RETURN, graphQLgetType(new type()), target, key);
-//   }
-// }
+function defineReturnType(target: any, key: any, type: any) {
+  if (Array.isArray(type)) {
+    Reflect.defineMetadata(
+      GRAPHQL_RESOLVER_RETURN,
+      new graphqlTypes.GraphQLList(graphQLgetType(new type[0]())),
+      target,
+      key
+    );
+  } else {
+    Reflect.defineMetadata(GRAPHQL_RESOLVER_RETURN, graphQLgetType(new type()), target, key);
+  }
+}
 
 /**
  * Decorator to set metadata for resolver.
@@ -97,7 +94,7 @@ export function graphQlQuery(args: GraphQLQueryMutationArg) {
   return (target: any, key: string): any => {
     Reflect.defineMetadata(GRAPHQL_RESOLVER_QUERY, args.name ? name : key, target, key);
     Reflect.defineMetadata(GRAPHQL_RESOLVER_RETURN, getGraphQLBasicType('string'), target, key);
-    // defineReturnType(target, key, args.return.type, args.return.isArray);
+    defineReturnType(target, key, args.return);
   };
 }
 
@@ -108,7 +105,7 @@ export function graphQlQuery(args: GraphQLQueryMutationArg) {
 export function graphQlMutation(args: GraphQLQueryMutationArg) {
   return (target: any, key: string): any => {
     Reflect.defineMetadata(GRAPHQL_RESOLVER_MUTATION, name ? name : key, target, key);
-    // defineReturnType(target, key, args.return.type, args.return.isArray);
+    defineReturnType(target, key, args.return);
   };
 }
 

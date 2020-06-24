@@ -10,11 +10,8 @@ export declare const GRAPHQL_RESOLVER_NEXT: string;
  * Arguments for query and mutation decorator.
  */
 interface GraphQLQueryMutationArg {
+    return: any;
     name?: string;
-    return: {
-        type: any;
-        isArray?: boolean;
-    };
 }
 /**
  * Decorator to set metadata for model.
@@ -39,13 +36,6 @@ export declare function graphQlColumn(name?: string): (target: any, key: string)
  * @param key
  */
 export declare function graphQlFk(name?: string): (target: any, key: string) => any;
-/**
- * set the return type for queries and mutations
- * @param target instance target
- * @param key the key propertie
- * @param type the type of return
- * @param isArray define if is array return
- */
 /**
  * Decorator to set metadata for resolver.
  * @param args
