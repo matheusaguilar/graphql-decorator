@@ -1,5 +1,6 @@
 import * as graphqlTypes from 'graphql';
 import {
+    GRAPHQL_MODEL_ENTITY,
     GRAPHQL_RESOLVER_QUERY,
     GRAPHQL_RESOLVER_MUTATION,
     GRAPHQL_RESOLVER_NEXT,
@@ -22,12 +23,15 @@ export class SchemaBuilder {
    * register all the models that will be used in the system.
    * @param models
    */
-  registerModels(...models: any) {
+  registerModels(...models: [new () => any]) {
     for (const model of models) {
-      // if () CHECK IF HAS GRAPHQL MODEL ANOTATION ON CLASS
-      const modelType = getGraphQLModel(new model());
-      this.modelTypesResolver[model.name.toLowerCase()] = model;
-      this.createModelTypeForResolver(modelType);
+      const modelInstance = new model();
+      console.log(Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance));
+      if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
+        const modelType = getGraphQLModel(modelInstance);
+        this.modelTypesResolver[model.name.toLowerCase()] = model;
+        this.createModelTypeForResolver(modelType);
+      }
     }
     return this;
   }
