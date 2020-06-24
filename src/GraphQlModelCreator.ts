@@ -70,7 +70,9 @@ function defineFK(target: any, key: any) {
       }
     });
 
-    return type;
+    console.log(type);
+
+    return [type];
     // return (await ORM.getInstance(type).read()) ? type.toGraphQL() : [];
   };
   Reflect.defineMetadata(GRAPHQL_TYPE, typeList, target, key);
