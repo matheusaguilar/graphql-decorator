@@ -28,7 +28,7 @@ export class SchemaBuilder {
     for (const model of models) {
       const modelInstance = new model();
       if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
-        const modelType = getGraphQLModel(modelInstance);
+        const modelType = getGraphQLModel(modelInstance, this.resolverModelFunction);
         this.modelTypesResolver[model.name.toLowerCase()] = model;
         this.createModelTypeForResolver(modelType);
       }
@@ -105,9 +105,11 @@ export class SchemaBuilder {
     if (Reflect.hasMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method)) {
       let typeReturn = Reflect.getMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method);
       if (Array.isArray(typeReturn)) {
-        return new graphqlTypes.GraphQLList(getGraphQLModel(new typeReturn[0]()));
+        return new graphqlTypes.GraphQLList(
+          getGraphQLModel(new typeReturn[0](), this.resolverModelFunction)
+        );
       } else {
-        return getGraphQLModel(new typeReturn());
+        return getGraphQLModel(new typeReturn(), this.resolverModelFunction);
       }
     }
     console.error(
@@ -280,7 +282,7 @@ export class SchemaBuilder {
     argNames.forEach((arg, index) => {
       if (pArgs[index].name.toLowerCase() !== 'ResContext'.toLowerCase()) {
         // not ResContext
-        const modelInputType = getGraphQLModel(new pArgs[index]());
+        const modelInputType = getGraphQLModel(new pArgs[index](), this.resolverModelFunction);
         const type = getGraphQLBasicType(pArgs[index].name);
         args[arg] = {
           type: type ? type : this.getModelTypeForResolver(modelInputType),

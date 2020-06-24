@@ -99,7 +99,10 @@ function resolver(arg, key) {
  * get GraphQL model for an object instance entity.
  * @param instance
  */
-export function getGraphQLModel(instance): graphqlTypes.GraphQLObjectType {
+export function getGraphQLModel(
+  instance,
+  resolveFunction: (model: any) => any
+): graphqlTypes.GraphQLObjectType {
   const type = {
     name: null,
     fields: {},
@@ -127,11 +130,13 @@ export function getGraphQLModel(instance): graphqlTypes.GraphQLObjectType {
           if (Reflect.hasMetadata(GRAPHQL_FK, instance, key)) {
             const keyName = Reflect.getMetadata(GRAPHQL_FK, instance, key);
             const fkTypeClass = Reflect.getMetadata(GRAPHQL_TYPE, instance, key);
-            const fkType = new graphqlTypes.GraphQLList(getGraphQLModel(new fkTypeClass()));
+            const fkType = new graphqlTypes.GraphQLList(
+              getGraphQLModel(new fkTypeClass(), resolveFunction)
+            );
             type.fields[key] = {
               type: fkType.ofType,
               resolve: (arg) => {
-                return resolver(arg, keyName);
+                return resolveFunction(resolver(arg, keyName));
               },
             };
           } else {
