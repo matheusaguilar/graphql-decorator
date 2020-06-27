@@ -24,7 +24,7 @@ export class SchemaBuilder {
    * register all the models that will be used in the system.
    * @param models
    */
-  registerModels(models: [new () => any]) {
+  registerModels(models: (new () => any)[]) {
     for (const model of models) {
       const modelInstance = new model();
       if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
@@ -40,7 +40,7 @@ export class SchemaBuilder {
    * register all the resolvers for graphQL.
    * @param resolvers the resolvers classes.
    */
-  registerResolvers(resolvers: [any]) {
+  registerResolvers(resolvers: (new () => any)[]) {
     for (const resolver of resolvers) {
       this.resolverInstances.push(new resolver());
     }
