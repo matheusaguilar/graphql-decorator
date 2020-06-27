@@ -109,7 +109,10 @@ export class SchemaBuilder {
           getGraphQLModel(new typeReturn[0](), this.resolverModelFunction)
         );
       } else {
-        return getGraphQLModel(new typeReturn(), this.resolverModelFunction);
+        const basicType = getGraphQLBasicType(typeReturn.name);
+        return basicType
+          ? basicType
+          : getGraphQLModel(new typeReturn(), this.resolverModelFunction);
       }
     }
     console.error(

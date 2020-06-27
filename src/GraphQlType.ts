@@ -31,8 +31,6 @@ export function isGraphQLscalarType(type) {
 export function getGraphQLBasicType(type) {
   if (typeof type === 'string') {
     return basicTypesMap[type.toLowerCase()] || null;
-  } else {
-    console.error('GraphQL: GraphQLType Error: type isnt basic type.');
   }
   return null;
 }
