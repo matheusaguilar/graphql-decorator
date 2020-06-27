@@ -20,9 +20,9 @@ interface GraphQLQueryMutationArg {
  * Decorator to set metadata for model.
  * @param name
  */
-export function graphQlModel(name?: string) {
+export function graphQlModel() {
   return (target: any) => {
-    Reflect.defineMetadata(GRAPHQL_MODEL_ENTITY, name ? name : target.name, target.prototype);
+    Reflect.defineMetadata(GRAPHQL_MODEL_ENTITY, target.name, target.prototype);
   };
 }
 
@@ -31,10 +31,10 @@ export function graphQlModel(name?: string) {
  * @param target
  * @param key
  */
-export function graphQlPk(name?: string) {
+export function graphQlPk() {
   return (target: any, key: string): any => {
     Reflect.defineMetadata(GRAPHQL_MODEL_PK, true, target, key);
-    Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, name ? name : key, target, key);
+    Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, key, target, key);
   };
 }
 
@@ -43,9 +43,9 @@ export function graphQlPk(name?: string) {
  * @param target
  * @param key
  */
-export function graphQlColumn(name?: string) {
+export function graphQlColumn() {
   return (target: any, key: string): any => {
-    Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, name ? name : key, target, key);
+    Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, key, target, key);
   };
 }
 
@@ -54,11 +54,11 @@ export function graphQlColumn(name?: string) {
  * @param target
  * @param key
  */
-export function graphQlFk(name?: string) {
+export function graphQlFk() {
   return (target: any, key: string): any => {
     const classType: any = Reflect.getMetadata('design:type', target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_FK, classType, target, key);
-    Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, name ? name : key, target, key);
+    Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, key, target, key);
   };
 }
 

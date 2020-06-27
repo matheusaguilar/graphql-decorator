@@ -17,25 +17,25 @@ interface GraphQLQueryMutationArg {
  * Decorator to set metadata for model.
  * @param name
  */
-export declare function graphQlModel(name?: string): (target: any) => void;
+export declare function graphQlModel(): (target: any) => void;
 /**
  * Decorator to set metadata for pk.
  * @param target
  * @param key
  */
-export declare function graphQlPk(name?: string): (target: any, key: string) => any;
+export declare function graphQlPk(): (target: any, key: string) => any;
 /**
  * Decorator to set metadata for property.
  * @param target
  * @param key
  */
-export declare function graphQlColumn(name?: string): (target: any, key: string) => any;
+export declare function graphQlColumn(): (target: any, key: string) => any;
 /**
  * Decorator to set metadata for property.
  * @param target
  * @param key
  */
-export declare function graphQlFk(name?: string): (target: any, key: string) => any;
+export declare function graphQlFk(): (target: any, key: string) => any;
 /**
  * Decorator to set metadata for resolver.
  * @param args
