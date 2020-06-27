@@ -10,3 +10,4 @@ export {
   graphQlNext,
 } from './Decorators';
 export { SchemaBuilder } from './SchemaBuilder';
+export { ResContext } from './ResContext';
