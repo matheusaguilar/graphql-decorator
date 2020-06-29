@@ -8,7 +8,6 @@ import { graphQlModel, graphQlPk, graphQlFk, graphQlColumn, graphQlQuery } from 
 
 @graphQlModel()
 export class State {
-
   @graphQlPk()
   public id: number = null;
 
@@ -17,12 +16,10 @@ export class State {
 
   @graphQlColumn()
   public initials: string = null;
-
 }
 
 @graphQlModel()
 export class City {
-
   @graphQlPk()
   public id: number = null;
 
@@ -31,11 +28,9 @@ export class City {
 
   @graphQlFk()
   public state: State = null;
-
 }
 
 export class ResolverExample {
-  
   @graphQlQuery({
     return: City
   })
@@ -62,7 +57,10 @@ const schemaBuilder = new SchemaBuilder((model: any) => {
   state.initials = 'EX';
   state.name = 'State name';
   return state;
-}).registerModels([State, City]).registerResolvers([ResolverExample]).buildSchema().then((graphqlSchema) => {
+})
+.registerModels([State, City])
+.registerResolvers([ResolverExample])
+.buildSchema().then((graphqlSchema) => {
   app.use('/graphql', (req, res) =>
     graphqlHTTP({
       schema: graphqlSchema,
