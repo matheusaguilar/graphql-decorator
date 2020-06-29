@@ -1,8 +1,80 @@
 ## Welcome to GitHub Pages
 
-You can use the [editor on GitHub](https://github.com/matheusaguilar/graphql-decorator/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+```javascript
+import * as http from 'http';
+import express from 'express';
+import graphqlHTTP from 'express-graphql';
+import { graphQlModel, graphQlPk, graphQlFk, graphQlColumn, graphQlQuery } from 'graphql-decorator/lib';
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+@graphQlModel()
+export class State {
+
+  @graphQlPk()
+  public id: number = null;
+
+  @graphQlColumn()
+  public name: string = null;
+
+  @graphQlColumn()
+  public initials: string = null;
+
+}
+
+@graphQlModel()
+export class City {
+
+  @graphQlPk()
+  public id: number = null;
+
+  @graphQlColumn()
+  public name: string = null;
+
+  @graphQlFk()
+  public state: State = null;
+
+}
+
+export class ResolverExample {
+  
+  @graphQlQuery({
+    return: City
+  })
+  async getCity(cityId: number) {
+    const city = new City();
+    city.id = cityId;
+    city.name = 'Awesome City';
+    city.state = new State();
+    city.state.id = 1;
+  }
+}
+
+const app = express();
+const httpServer = new http.Server(app);
+
+const PORT = 8080;
+httpServer.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}!`);
+});
+
+const schemaBuilder = new SchemaBuilder((model: any) => {
+  const state = new State();
+  state.id = model.id;
+  state.initials = 'EX';
+  state.name = 'State name';
+  return state;
+}).registerModels([State, City]).registerResolvers([ResolverExample]).buildSchema().then((graphqlSchema) => {
+  app.use('/graphql', (req, res) =>
+    graphqlHTTP({
+      schema: graphqlSchema,
+      graphiql: true,
+      context: {
+        req,
+        res,
+      },
+    })(req, res)
+  );
+});
+```
 
 ### Markdown
 
