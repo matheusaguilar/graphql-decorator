@@ -52,10 +52,6 @@ function defineFK(target: any, key: any) {
   Reflect.defineMetadata(GRAPHQL_TYPE, classType, target, key);
 }
 
-function resolver(arg, key) {
-  return arg[key];
-}
-
 /**
  * get GraphQL model for an object instance entity.
  * @param instance
@@ -96,7 +92,15 @@ export function getGraphQLModel(
             type.fields[key] = {
               type: fkType.ofType,
               resolve: (arg) => {
-                return resolveFunction(resolver(arg, key));
+                const fkInstance = new fkTypeClass();
+                const fkModel = arg[key];
+                for (const fkKey of Object.keys(fkInstance)) {
+                  if (fkModel[fkKey] !== undefined) {
+                    fkInstance[key] = fkModel[fkKey];
+                  }
+                }
+
+                return resolveFunction(fkInstance);
               },
             };
           } else {
