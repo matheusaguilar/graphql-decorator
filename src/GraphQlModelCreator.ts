@@ -53,6 +53,27 @@ function defineFK(target: any, key: any) {
 }
 
 /**
+ * create an instance of class to send as param for resolverMethod of builder.
+ * @param classType the class type to create.
+ * @param arg the argument received.
+ * @param key the name of column of arg that match the classType instance.
+ */
+function resolve(classType: any, arg: any, key: any) {
+  const fkInstance = new classType();
+  const fkModel = arg[key];
+  let hasPk = false;
+  for (const fkKey of Object.keys(fkInstance)) {
+    if (fkModel[fkKey] !== undefined) {
+      if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
+        hasPk = true;
+      }
+      fkInstance[fkKey] = fkModel[fkKey];
+    }
+  }
+  return hasPk ? fkInstance : null;
+}
+
+/**
  * get GraphQL model for an object instance entity.
  * @param instance
  */
@@ -92,14 +113,7 @@ export function getGraphQLModel(
             type.fields[key] = {
               type: fkType.ofType,
               resolve: (arg) => {
-                const fkInstance = new fkTypeClass();
-                const fkModel = arg[key];
-                for (const fkKey of Object.keys(fkInstance)) {
-                  if (fkModel[fkKey] !== undefined) {
-                    fkInstance[fkKey] = fkModel[fkKey];
-                  }
-                }
-                return resolveFunction(fkInstance);
+                return resolveFunction(resolve(fkTypeClass, arg, key));
               },
             };
           } else {
