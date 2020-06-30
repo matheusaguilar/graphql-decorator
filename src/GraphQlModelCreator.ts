@@ -63,7 +63,7 @@ function resolve(classType: any, arg: any, key: any) {
   const fkModel = arg[key];
   let hasPk = false;
   for (const fkKey of Object.keys(fkInstance)) {
-    if (fkModel[fkKey] !== undefined) {
+    if (fkModel[fkKey] !== undefined && fkModel[fkKey] !== null) {
       if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
         hasPk = true;
       }
