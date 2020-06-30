@@ -94,16 +94,11 @@ export function getGraphQLModel(
               resolve: (arg) => {
                 const fkInstance = new fkTypeClass();
                 const fkModel = arg[key];
-                console.log('fkModel');
-                console.log(fkModel);
                 for (const fkKey of Object.keys(fkInstance)) {
-                  console.log('key');
-                  console.log(fkKey);
                   if (fkModel[fkKey] !== undefined) {
                     fkInstance[fkKey] = fkModel[fkKey];
                   }
                 }
-
                 return resolveFunction(fkInstance);
               },
             };
