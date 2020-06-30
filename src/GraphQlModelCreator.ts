@@ -100,7 +100,7 @@ export function getGraphQLModel(
                   console.log('key');
                   console.log(fkKey);
                   if (fkModel[fkKey] !== undefined) {
-                    fkInstance[key] = fkModel[fkKey];
+                    fkInstance[fkKey] = fkModel[fkKey];
                   }
                 }
 
