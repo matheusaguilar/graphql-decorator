@@ -128,6 +128,21 @@ At the moment, typescript don't support in Reflection to get the type of an Arra
   return: [Type]
 })
 ```
+### ResContext
+When creating a query or mutation maybe you need the request/response of the request, to get that you just need to put some argument with the type ResContext.
+
+```javascript
+import { ResContext } from 'graphql-decorator/lib';
+
+@graphQlQuery({
+  return: [Type]
+})
+async exampleQuery(city: City, state: State, context: ResContext) {
+   console.log(context.req);
+   console.log(context.res);
+   return null;
+}
+```
 
 ### SchemaBuilder
 SchemaBuilder will be the class that will be used to register all models, resolvers and to create the schema for you.
@@ -174,6 +189,7 @@ export class ResolverExample {
     city.name = 'Awesome City';
     city.state = new State();
     city.state.id = 1;
+    return city;
   }
 }
 
