@@ -28,6 +28,9 @@ function getGraphQLType(target, arg) {
  * @param key
  */
 function definePK(target: any, key: any) {
+  target.constructor.prototype[key] = target.constructor.prototype[key]
+    ? target.constructor.prototype[key]
+    : null;
   Reflect.defineMetadata(GRAPHQL_TYPE, getGraphQLType(target, key), target, key);
 }
 
@@ -37,6 +40,9 @@ function definePK(target: any, key: any) {
  * @param key
  */
 function defineColumn(target: any, key: any) {
+  target.constructor.prototype[key] = target.constructor.prototype[key]
+    ? target.constructor.prototype[key]
+    : null;
   Reflect.defineMetadata(GRAPHQL_TYPE, getGraphQLType(target, key), target, key);
 }
 
@@ -46,6 +52,9 @@ function defineColumn(target: any, key: any) {
  * @param key
  */
 function defineFK(target: any, key: any) {
+  target.constructor.prototype[key] = target.constructor.prototype[key]
+    ? target.constructor.prototype[key]
+    : null;
   const classType: any = Reflect.getMetadata('design:type', target, key);
   const nameFkColumn: any = Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, target, key);
   Reflect.defineMetadata(GRAPHQL_FK, nameFkColumn, target, key);
