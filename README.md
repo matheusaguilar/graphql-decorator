@@ -81,7 +81,7 @@ export class ResolverQueryExample {
 | Arguments  |  Description  |
 | ------------------- | ------------------- |
 |  return |  Define the type of the return of the query. Can be any one of the types: **String, Number, Boolean** or Some Model(**@graphQlModel**) |
-|  name? |  Define the name of the query that will be created, if not provided the query will use the function name. |
+|  name? |  Define the name of the mutation that will be created, if not provided the query will use the function name. |
 
 ```javascript
 export class ResolverMutationExample {
