@@ -71,7 +71,7 @@ function resolve(classType: any, arg: any, key: any) {
   const fkInstance = new classType();
   const fkModel = arg[key];
   let hasPk = false;
-  for (const fkKey of Object.keys(fkInstance)) {
+  for (const fkKey of Object.keys(fkInstance.constructor.prototype)) {
     if (fkModel[fkKey] !== undefined && fkModel[fkKey] !== null) {
       if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
         hasPk = true;
@@ -100,7 +100,7 @@ export function getGraphQLModel(
     const modelName = type.name.toLowerCase();
 
     if (!graphQLModelTypes[modelName]) {
-      for (const key of Object.keys(instance)) {
+      for (const key of Object.keys(instance.constructor.prototype)) {
         // define pk, fk and column graphql metadata
         if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, instance, key)) {
           definePK(instance, key);
@@ -111,7 +111,7 @@ export function getGraphQLModel(
         }
       }
 
-      for (const key of Object.keys(instance)) {
+      for (const key of Object.keys(instance.constructor.prototype)) {
         // get properties metadata
         if (Reflect.hasMetadata(GRAPHQL_TYPE, instance, key)) {
           if (Reflect.hasMetadata(GRAPHQL_FK, instance, key)) {

@@ -20,7 +20,7 @@ export class FillModelUtil {
     let model = null;
     if (input && modelClass) {
       model = new modelClass();
-      Object.keys(model).forEach((key) => {
+      Object.keys(model.constructor.prototype).forEach((key) => {
         if (Reflect.hasMetadata(GRAPHQL_MODEL_FK, model, key)) {
           const childClass = Reflect.getMetadata(GRAPHQL_MODEL_FK, model, key);
           model[key] = this.fillModelFromRequest(input[key], childClass);
