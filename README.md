@@ -15,13 +15,13 @@ Model Types: Are the models that's decorated with **@graphQlModel()**
 ### Models
 For models we have the decorators:
 
-* **@graphQlModel**: Defines a model type of graphQL.
+**@graphQlModel**: Defines a model type of graphQL.
 
-* **@graphQlPk**: Defines the attribute that's used to resolve this model.
+**@graphQlPk**: Defines the attribute that's used to resolve this model.
 
-* **@graphQlColumn**: Defines one attribute of the model.
+**@graphQlColumn**: Defines one attribute of the model.
 
-* **@graphQlFk**: Define a foreign model that will need be resolved.
+**@graphQlFk**: Define a foreign model that will need be resolved.
 
 ```javascript
 import { graphQlModel, graphQlPk, graphQlFk, graphQlColumn } from 'graphql-decorator/lib';
@@ -54,7 +54,7 @@ export class City {
 ### Resolvers
 Resolvers have decorators for functions of the class:
 
-* **@graphQlQuery**: Create a GraphQL query.
+**@graphQlQuery**: Create a GraphQL query.
 
 | Arguments  |  Description  |
 | ------------------- | ------------------- |
@@ -76,7 +76,7 @@ export class ResolverQueryExample {
 }
 ```
 
-* **@graphQlMutation**: Create a GraphQL mutation.
+**@graphQlMutation**: Create a GraphQL mutation.
 
 | Arguments  |  Description  |
 | ------------------- | ------------------- |
@@ -95,7 +95,7 @@ export class ResolverMutationExample {
 }
 ```
 
-* **@graphQlNext**: Can be used to validate a GraphQL query or mutation, like express next function. This will be called before the query/mutation and if doesn't call the next() the query/mutation not will be triggered.
+**@graphQlNext**: Can be used to validate a GraphQL query or mutation, like express next function. This will be called before the query/mutation and if doesn't call the next() the query/mutation not will be triggered.
 
 | Arguments  |  Description  |
 | ------------------- | ------------------- |
