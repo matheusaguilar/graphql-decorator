@@ -101,11 +101,11 @@ export class ResolverMutationExample {
 | ------------------- | ------------------- |
 |  function(request, response, next): void |  Expects a function as argument to be called, inside the function you'll have the request, response and next arguments. If validation fail, just don't call next() then the query/mutation not will be triggered.
 
-```
+```javascript
 function validateUserRole(req, res, next) {
-  const user = req.token.user; // mock: get user token example of the request
+  const user = req.token.user; // get user from token in request example
   if (user === 'admin') {
-    next(); // call the query, otherwise return null
+    next(); // trigger the query
   }
 }
 
@@ -120,6 +120,16 @@ export class ResolverNextExample {
   }
 }
 ```
+
+### How to use Arrays as type
+At the moment, typescript don't support in Reflection to get the type of an Array. To bypass this, I defined an Array with the type inside it:
+```javascript
+[Type]
+```
+
+### SchemaBuilder
+SchemaBuilder will be the class that will be used to register all models, resolvers and to create the schema for you.
+On the constructor of this class you need to pass a function that will resolve all models. When graphql need to resolve a model he'll call this function passing the model as argument with the @graphQlPk() attribute filled. A full example will be shown:
 
 
 ```javascript
@@ -174,6 +184,7 @@ httpServer.listen(PORT, () => {
 });
 
 const schemaBuilder = new SchemaBuilder((model: any) => {
+  // when call the resolver, City has a fk of State, to resolve the State this function will be called.
   const state = new State();
   state.id = model.id;
   state.initials = 'EX';
@@ -187,7 +198,7 @@ const schemaBuilder = new SchemaBuilder((model: any) => {
     graphqlHTTP({
       schema: graphqlSchema,
       graphiql: true,
-      context: {
+      context: { // context is really important for this package (Needed)
         req,
         res,
       },
@@ -195,35 +206,3 @@ const schemaBuilder = new SchemaBuilder((model: any) => {
   );
 });
 ```
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/matheusaguilar/graphql-decorator/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
