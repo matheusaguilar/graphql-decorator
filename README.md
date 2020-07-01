@@ -51,7 +51,7 @@ export class City {
 }
 ```
 
-#### Resolvers
+### Resolvers
 Resolvers have decorators for functions of the class:
 
 * **@graphQlQuery**: Create a GraphQL query.
@@ -124,7 +124,9 @@ export class ResolverNextExample {
 ### How to use Arrays as type
 At the moment, typescript don't support in Reflection to get the type of an Array. To bypass this, I defined an Array with the type inside it:
 ```javascript
-[Type]
+@graphQlQuery({
+  return: [Type]
+})
 ```
 
 ### SchemaBuilder
