@@ -98,7 +98,8 @@ export function getGraphQLModel(
         if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, instance, key)) {
           definePK(instance, key);
         } else if (Reflect.hasMetadata(GRAPHQL_MODEL_FK, instance, key)) {
-          defineFK(instance, key, Reflect.getMetadata(GRAPHQL_MODEL_FK, instance, key));
+          const typeClassFk = Reflect.getMetadata(GRAPHQL_MODEL_FK, instance, key);
+          defineFK(instance, key, typeClassFk());
         } else if (Reflect.hasMetadata(GRAPHQL_MODEL_COLUMN, instance, key)) {
           defineColumn(instance, key);
         }

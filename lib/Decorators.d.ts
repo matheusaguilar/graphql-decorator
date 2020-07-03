@@ -36,7 +36,7 @@ export declare function graphQlColumn(): (target: any, key: string) => any;
  * @param target
  * @param key
  */
-export declare function graphQlFk(type: any): (target: any, key: string) => any;
+export declare function graphQlFk(type: () => any): (target: any, key: string) => any;
 /**
  * Decorator to set metadata for resolver.
  * @param args
