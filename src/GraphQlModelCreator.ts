@@ -100,6 +100,9 @@ export function getGraphQLModel(
     const modelName = type.name.toLowerCase();
 
     if (!graphQLModelTypes[modelName]) {
+      console.log(Object.keys(instance.constructor.prototype));
+      console.log(Object.keys(instance));
+
       for (const key of Object.keys(instance.constructor.prototype)) {
         // define pk, fk and column graphql metadata
         if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, instance, key)) {
