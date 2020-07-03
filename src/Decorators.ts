@@ -7,6 +7,7 @@ export const GRAPHQL_RESOLVER_QUERY = `${reflectPrefix}_query`;
 export const GRAPHQL_RESOLVER_MUTATION = `${reflectPrefix}_mutation`;
 export const GRAPHQL_RESOLVER_RETURN = `${reflectPrefix}_return`;
 export const GRAPHQL_RESOLVER_NEXT = `${reflectPrefix}_next`;
+export const GRAPHQL_MODEL_FIELDS = `${reflectPrefix}_model_fields`;
 
 /**
  * Arguments for query and mutation decorator.
@@ -14,6 +15,12 @@ export const GRAPHQL_RESOLVER_NEXT = `${reflectPrefix}_next`;
 interface GraphQLQueryMutationArg {
   return: any;
   name?: string;
+}
+
+function defineFields(target: any, key: any) {
+  let existingFields: string[] = Reflect.getOwnMetadata(GRAPHQL_MODEL_FIELDS, target) || [];
+  existingFields.push(key);
+  Reflect.defineMetadata(GRAPHQL_MODEL_FIELDS, existingFields, target);
 }
 
 /**
@@ -33,6 +40,7 @@ export function graphQlModel() {
  */
 export function graphQlPk() {
   return (target: any, key: string): any => {
+    defineFields(target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_PK, true, target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, key, target, key);
   };
@@ -45,6 +53,7 @@ export function graphQlPk() {
  */
 export function graphQlColumn() {
   return (target: any, key: string): any => {
+    defineFields(target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, key, target, key);
   };
 }
@@ -56,6 +65,7 @@ export function graphQlColumn() {
  */
 export function graphQlFk() {
   return (target: any, key: string): any => {
+    defineFields(target, key);
     const classType: any = Reflect.getMetadata('design:type', target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_FK, classType, target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, key, target, key);

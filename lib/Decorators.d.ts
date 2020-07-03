@@ -6,6 +6,7 @@ export declare const GRAPHQL_RESOLVER_QUERY: string;
 export declare const GRAPHQL_RESOLVER_MUTATION: string;
 export declare const GRAPHQL_RESOLVER_RETURN: string;
 export declare const GRAPHQL_RESOLVER_NEXT: string;
+export declare const GRAPHQL_MODEL_FIELDS: string;
 /**
  * Arguments for query and mutation decorator.
  */

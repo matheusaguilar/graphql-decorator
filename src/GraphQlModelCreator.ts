@@ -5,19 +5,13 @@ import {
   GRAPHQL_MODEL_PK,
   GRAPHQL_MODEL_COLUMN,
   GRAPHQL_MODEL_FK,
+  GRAPHQL_MODEL_FIELDS,
 } from './Decorators';
 
 const reflectPrefix = 'graphql_model_creator';
 const GRAPHQL_TYPE = `${reflectPrefix}_type`;
 const GRAPHQL_FK = `${reflectPrefix}_type_fk`;
-const GRAPHQL_FIELDS = `${reflectPrefix}_type_fields`;
 const graphQLModelTypes = {};
-
-function defineFields(target: any, key: any) {
-  let existingFields: string[] = Reflect.getOwnMetadata(GRAPHQL_FIELDS, target) || [];
-  existingFields.push(key);
-  Reflect.defineMetadata(GRAPHQL_FIELDS, existingFields, target);
-}
 
 /**
  * get the target type and return the GraphQL type.
@@ -35,7 +29,6 @@ function getGraphQLType(target, arg) {
  * @param key
  */
 function definePK(target: any, key: any) {
-  defineFields(target, key);
   Reflect.defineMetadata(GRAPHQL_TYPE, getGraphQLType(target, key), target, key);
 }
 
@@ -45,7 +38,6 @@ function definePK(target: any, key: any) {
  * @param key
  */
 function defineColumn(target: any, key: any) {
-  defineFields(target, key);
   Reflect.defineMetadata(GRAPHQL_TYPE, getGraphQLType(target, key), target, key);
 }
 
@@ -55,7 +47,6 @@ function defineColumn(target: any, key: any) {
  * @param key
  */
 function defineFK(target: any, key: any) {
-  defineFields(target, key);
   const classType: any = Reflect.getMetadata('design:type', target, key);
   const nameFkColumn: any = Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, target, key);
   Reflect.defineMetadata(GRAPHQL_FK, nameFkColumn, target, key);
@@ -100,7 +91,7 @@ export function getGraphQLModel(
     type.name = Reflect.getMetadata(GRAPHQL_MODEL_ENTITY, instance); // get class metadata
     const modelName = type.name.toLowerCase();
 
-    console.log(Reflect.getMetadata(GRAPHQL_FIELDS, instance));
+    console.log(Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, instance));
 
     if (!graphQLModelTypes[modelName]) {
       for (const key of Object.keys(instance.constructor.prototype)) {
