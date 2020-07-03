@@ -63,7 +63,8 @@ function resolve(classType: any, arg: any, key: any) {
   const fkInstance = new classType();
   const fkModel = arg[key];
   let hasPk = false;
-  for (const fkKey of Object.keys(fkInstance.constructor.prototype)) {
+  const modelKeys = Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, fkInstance);
+  for (const fkKey of modelKeys) {
     if (fkModel[fkKey] !== undefined && fkModel[fkKey] !== null) {
       if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
         hasPk = true;
@@ -90,11 +91,10 @@ export function getGraphQLModel(
   if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, instance)) {
     type.name = Reflect.getMetadata(GRAPHQL_MODEL_ENTITY, instance); // get class metadata
     const modelName = type.name.toLowerCase();
-
-    console.log(Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, instance));
+    const modelKeys = Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, instance);
 
     if (!graphQLModelTypes[modelName]) {
-      for (const key of Object.keys(instance.constructor.prototype)) {
+      for (const key of modelKeys) {
         // define pk, fk and column graphql metadata
         if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, instance, key)) {
           definePK(instance, key);
@@ -105,7 +105,7 @@ export function getGraphQLModel(
         }
       }
 
-      for (const key of Object.keys(instance.constructor.prototype)) {
+      for (const key of modelKeys) {
         // get properties metadata
         if (Reflect.hasMetadata(GRAPHQL_TYPE, instance, key)) {
           if (Reflect.hasMetadata(GRAPHQL_FK, instance, key)) {
