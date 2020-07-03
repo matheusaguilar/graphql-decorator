@@ -63,11 +63,10 @@ export function graphQlColumn() {
  * @param target
  * @param key
  */
-export function graphQlFk() {
+export function graphQlFk(type: any) {
   return (target: any, key: string): any => {
     defineFields(target, key);
-    const classType: any = Reflect.getMetadata('design:type', target, key);
-    Reflect.defineMetadata(GRAPHQL_MODEL_FK, classType, target, key);
+    Reflect.defineMetadata(GRAPHQL_MODEL_FK, type, target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, key, target, key);
   };
 }
