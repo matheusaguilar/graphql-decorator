@@ -10,7 +10,14 @@ import {
 const reflectPrefix = 'graphql_model_creator';
 const GRAPHQL_TYPE = `${reflectPrefix}_type`;
 const GRAPHQL_FK = `${reflectPrefix}_type_fk`;
+const GRAPHQL_FIELDS = `${reflectPrefix}_type_fields`;
 const graphQLModelTypes = {};
+
+function defineFields(target: any, key: any) {
+  let existingFields: string[] = Reflect.getOwnMetadata(GRAPHQL_FIELDS, target) || [];
+  existingFields.push(key);
+  Reflect.defineMetadata(GRAPHQL_FIELDS, existingFields, target);
+}
 
 /**
  * get the target type and return the GraphQL type.
@@ -28,9 +35,7 @@ function getGraphQLType(target, arg) {
  * @param key
  */
 function definePK(target: any, key: any) {
-  target.constructor.prototype[key] = target.constructor.prototype[key]
-    ? target.constructor.prototype[key]
-    : null;
+  defineFields(target, key);
   Reflect.defineMetadata(GRAPHQL_TYPE, getGraphQLType(target, key), target, key);
 }
 
@@ -40,9 +45,7 @@ function definePK(target: any, key: any) {
  * @param key
  */
 function defineColumn(target: any, key: any) {
-  target.constructor.prototype[key] = target.constructor.prototype[key]
-    ? target.constructor.prototype[key]
-    : null;
+  defineFields(target, key);
   Reflect.defineMetadata(GRAPHQL_TYPE, getGraphQLType(target, key), target, key);
 }
 
@@ -52,9 +55,7 @@ function defineColumn(target: any, key: any) {
  * @param key
  */
 function defineFK(target: any, key: any) {
-  target.constructor.prototype[key] = target.constructor.prototype[key]
-    ? target.constructor.prototype[key]
-    : null;
+  defineFields(target, key);
   const classType: any = Reflect.getMetadata('design:type', target, key);
   const nameFkColumn: any = Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, target, key);
   Reflect.defineMetadata(GRAPHQL_FK, nameFkColumn, target, key);
@@ -99,10 +100,9 @@ export function getGraphQLModel(
     type.name = Reflect.getMetadata(GRAPHQL_MODEL_ENTITY, instance); // get class metadata
     const modelName = type.name.toLowerCase();
 
-    if (!graphQLModelTypes[modelName]) {
-      console.log(Object.keys(instance.constructor.prototype));
-      console.log(Object.keys(instance));
+    console.log(Reflect.getMetadata(GRAPHQL_FIELDS, instance));
 
+    if (!graphQLModelTypes[modelName]) {
       for (const key of Object.keys(instance.constructor.prototype)) {
         // define pk, fk and column graphql metadata
         if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, instance, key)) {
