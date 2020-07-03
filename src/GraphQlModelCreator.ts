@@ -47,10 +47,9 @@ function defineColumn(target: any, key: any) {
  * @param key
  */
 function defineFK(target: any, key: any, type: any) {
-  const classType: any = Reflect.getMetadata('design:type', target, key);
   const nameFkColumn: any = Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, target, key);
   Reflect.defineMetadata(GRAPHQL_FK, nameFkColumn, target, key);
-  Reflect.defineMetadata(GRAPHQL_TYPE, classType, target, key);
+  Reflect.defineMetadata(GRAPHQL_TYPE, type, target, key);
 }
 
 /**
