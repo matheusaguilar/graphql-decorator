@@ -30,10 +30,6 @@ export class FillModelUtil {
           Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, model, key) &&
           input[key] !== undefined
         ) {
-          // if null input, transform to undefined
-          if (input[key] === null) {
-            input[key] = undefined;
-          }
           model[key] = input[key];
         }
       }
