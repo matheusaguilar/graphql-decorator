@@ -54,23 +54,53 @@ function defineFK(target: any, key: any, type: any) {
 
 /**
  * create an instance of class to send as param for resolverMethod of builder.
+ * arg can be in two formats:
+ * 1: Obj { attr1: '', attr2: '', FkModel: { id: 5 }}
+ * 2: Obj { attr1: '', attr2: '', fkModelId: 5}
+ *
  * @param classType the class type to create.
  * @param arg the argument received.
  * @param key the name of column of arg that match the classType instance.
  */
 function resolve(classType: any, arg: any, key: any) {
   const fkInstance = new classType();
-  const fkModel = arg[key];
-  let hasPk = false;
+  let fkModel = arg[key];
+  let hasPk;
   const modelKeys = Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, fkInstance);
-  for (const fkKey of modelKeys) {
-    if (fkModel[fkKey] !== undefined && fkModel[fkKey] !== null) {
+
+  // if format 2
+  if (!fkModel) {
+    for (const fkKey of modelKeys) {
       if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
-        hasPk = true;
+        hasPk = fkKey;
+        let argKey = Reflect.getMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey);
+        argKey = argKey.charAt(0).toUpperCase() + argKey.slice(1);
+        fkModel = arg[`${fkInstance.constructor.name}${argKey}`];
       }
-      fkInstance[fkKey] = fkModel[fkKey];
     }
   }
+
+  if (fkModel) {
+    // format 2
+    if (hasPk) {
+      fkInstance[hasPk] = fkModel;
+    } else {
+      // format 1
+      for (const fkKey of modelKeys) {
+        if (fkModel[fkKey]) {
+          if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
+            hasPk = true;
+          }
+          fkInstance[fkKey] = fkModel[fkKey];
+        }
+      }
+    }
+  } else {
+    console.error(`GraphQL: ModelCreator: Can't find id in model arguments to resolve the model.`);
+    console.error(classType.constructor.name);
+    console.error(arg);
+  }
+
   return hasPk ? fkInstance : null;
 }
 
