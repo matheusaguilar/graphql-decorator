@@ -73,9 +73,12 @@ function resolve(classType: any, arg: any, key: any) {
     for (const fkKey of modelKeys) {
       if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
         hasPk = fkKey;
-        let argKey = Reflect.getMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey);
-        argKey = argKey.charAt(0).toUpperCase() + argKey.slice(1);
-        fkModel = arg[`${fkInstance.constructor.name}${argKey}`];
+        let argKey = fkKey;
+        argKey =
+          fkInstance.constructor.name.toLowerCase() +
+          argKey.charAt(0).toUpperCase() +
+          argKey.slice(1);
+        fkModel = arg[argKey];
       }
     }
   }
@@ -97,7 +100,7 @@ function resolve(classType: any, arg: any, key: any) {
     }
   } else {
     console.error(`GraphQL: ModelCreator: Can't find id in model arguments to resolve the model.`);
-    console.error(classType.constructor.name);
+    console.error(fkInstance.constructor.name);
     console.error(arg);
   }
 
