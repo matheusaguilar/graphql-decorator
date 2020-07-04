@@ -98,10 +98,6 @@ function resolve(classType: any, arg: any, key: any) {
         }
       }
     }
-  } else {
-    console.error(`GraphQL: ModelCreator: Can't find id in model arguments to resolve the model.`);
-    console.error(fkInstance.constructor.name);
-    console.error(arg);
   }
 
   return hasPk ? fkInstance : null;

@@ -115,9 +115,6 @@ export class SchemaBuilder {
           : getGraphQLModel(new typeReturn(), this.resolverModelFunction);
       }
     }
-    console.error(
-      `GraphQL: Schema: Error at ${resolver.constructor.name} in method ${method}, no returnType defined.`
-    );
     return null;
   }
 
