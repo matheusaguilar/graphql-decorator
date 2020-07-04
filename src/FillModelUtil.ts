@@ -25,7 +25,7 @@ export class FillModelUtil {
       for (const key of modelKeys) {
         if (Reflect.hasMetadata(GRAPHQL_MODEL_FK, model, key)) {
           const childClass = Reflect.getMetadata(GRAPHQL_MODEL_FK, model, key);
-          model[key] = this.fillModelFromRequest(input[key], childClass);
+          model[key] = this.fillModelFromRequest(input[key], childClass());
         } else if (
           Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, model, key) &&
           input[key] !== undefined
