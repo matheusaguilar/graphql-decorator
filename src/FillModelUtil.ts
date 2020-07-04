@@ -1,4 +1,4 @@
-import { GRAPHQL_MODEL_COLUMN, GRAPHQL_MODEL_FK } from './Decorators';
+import { GRAPHQL_MODEL_COLUMN, GRAPHQL_MODEL_FK, GRAPHQL_MODEL_FIELDS } from './Decorators';
 
 export class FillModelUtil {
   /**
@@ -20,7 +20,9 @@ export class FillModelUtil {
     let model = null;
     if (input && modelClass) {
       model = new modelClass();
-      Object.keys(model.constructor.prototype).forEach((key) => {
+      const modelKeys = Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, model);
+
+      for (const key of modelKeys) {
         if (Reflect.hasMetadata(GRAPHQL_MODEL_FK, model, key)) {
           const childClass = Reflect.getMetadata(GRAPHQL_MODEL_FK, model, key);
           model[key] = this.fillModelFromRequest(input[key], childClass);
@@ -34,7 +36,7 @@ export class FillModelUtil {
           }
           model[key] = input[key];
         }
-      });
+      }
     }
 
     return model;
