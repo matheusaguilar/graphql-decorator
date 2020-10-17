@@ -32,6 +32,7 @@ export declare class SchemaBuilder {
      * @param resolver
      * @param method
      * @param context
+     * @param argsLength
      */
     private getResolverArgsArray;
     /**

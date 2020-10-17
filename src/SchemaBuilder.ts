@@ -125,11 +125,13 @@ export class SchemaBuilder {
    * @param resolver
    * @param method
    * @param context
+   * @param argsLength
    */
-  private getResolverArgsArray(hasArgs, args, resolver, method, context) {
+  private getResolverArgsArray(hasArgs, args, resolver, method, context, argsLength) {
     const argsAsArray = [];
     if (hasArgs) {
       const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
+
       Object.keys(args).forEach((arg, index) => {
         if (!getGraphQLBasicType(pArgs[index].name)) {
           argsAsArray.push(
@@ -142,6 +144,10 @@ export class SchemaBuilder {
           argsAsArray.push(args[arg]);
         }
       });
+
+      for (let i = argsAsArray.length; i < argsLength; i++) {
+        argsAsArray.push(null);
+      }
     }
     argsAsArray.push(context);
     return argsAsArray;
@@ -159,6 +165,7 @@ export class SchemaBuilder {
       if (Reflect.hasMetadata(GRAPHQL_RESOLVER_QUERY, resolver, method)) {
         const queryName = Reflect.getMetadata(GRAPHQL_RESOLVER_QUERY, resolver, method);
         const hasArgs = resolver[method].length > 0;
+        let argsLength = 0;
         const argNames = this.getFunctionArgsNames(resolver[method]);
 
         queryFields[queryName] = {};
@@ -168,12 +175,20 @@ export class SchemaBuilder {
         // add args params
         if (hasArgs) {
           queryFields[queryName].args = this.getArgsTypes(resolver, method, argNames);
+          argsLength = Object.keys(queryFields[queryName].args).length;
         }
 
         // execute the function in resolver to return a response for graphql
         queryFields[queryName].resolve = (_, args, context) => {
           if (this.validateNextFunctions(resolver, method, context)) {
-            const argsAsArray = this.getResolverArgsArray(hasArgs, args, resolver, method, context);
+            const argsAsArray = this.getResolverArgsArray(
+              hasArgs,
+              args,
+              resolver,
+              method,
+              context,
+              argsLength
+            );
             return resolver[method].apply(resolver, argsAsArray);
           }
           return null;
@@ -197,6 +212,7 @@ export class SchemaBuilder {
       if (Reflect.hasMetadata(GRAPHQL_RESOLVER_MUTATION, resolver, method)) {
         const queryName = Reflect.getMetadata(GRAPHQL_RESOLVER_MUTATION, resolver, method);
         const hasArgs = resolver[method].length > 0;
+        let argsLength = 0;
         const argNames = this.getFunctionArgsNames(resolver[method]);
 
         mutationFields[queryName] = {};
@@ -206,12 +222,20 @@ export class SchemaBuilder {
         // add args params
         if (hasArgs) {
           mutationFields[queryName].args = this.getArgsTypes(resolver, method, argNames);
+          argsLength = Object.keys(mutationFields[queryName].args).length;
         }
 
         // execute the function in resolver to return a response for graphql
         mutationFields[queryName].resolve = (_, args, context) => {
           if (this.validateNextFunctions(resolver, method, context)) {
-            const argsAsArray = this.getResolverArgsArray(hasArgs, args, resolver, method, context);
+            const argsAsArray = this.getResolverArgsArray(
+              hasArgs,
+              args,
+              resolver,
+              method,
+              context,
+              argsLength
+            );
             return resolver[method].apply(resolver, argsAsArray);
           }
           return null;
