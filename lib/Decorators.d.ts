@@ -60,5 +60,5 @@ export declare function GraphQlAuth(func: Function): (target: any, key: string) 
  * Decorator to set metadata for param of resolver.
  * @param args
  */
-export declare function GraphQlParam(options: GraphQLParamOptions): (target: any, key: string) => any;
+export declare function GraphQlParam(options: GraphQLParamOptions): any;
 export {};

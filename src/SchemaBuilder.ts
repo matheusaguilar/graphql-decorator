@@ -303,17 +303,36 @@ export class SchemaBuilder {
     const args = {};
 
     const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
+    const options = Reflect.getMetadata(GRAPHQL_RESOLVER_PARAM, resolver, method);
 
     argNames.forEach((arg, index) => {
-      // const options = Reflect.getMetadata(GRAPHQL_RESOLVER_PARAM, resolver[method], arg);
-      // console.log(options);
-
-      // not ResContext
       if (pArgs[index].name.toLowerCase() !== 'ResContext'.toLowerCase()) {
-        const modelInputType = getGraphQLModel(new pArgs[index](), this.resolverModelFunction);
-        const type = getGraphQLBasicType(pArgs[index].name);
+        let optionsArg = null;
+        let modelType = null;
+        let isArray = false;
+
+        options?.forEach((opt) => {
+          if (opt.index === index) {
+            optionsArg = opt.options;
+          }
+        });
+
+        modelType = optionsArg ? optionsArg.type : pArgs[index];
+        if (Array.isArray(modelType)) {
+          modelType = modelType[0];
+          isArray = true;
+        }
+
+        const type = getGraphQLBasicType(modelType.name);
+        if (type) {
+          modelType = type;
+        } else {
+          const modelInputType = getGraphQLModel(new modelType(), this.resolverModelFunction);
+          modelType = this.getModelTypeForResolver(modelInputType);
+        }
+
         args[arg] = {
-          type: type ? type : this.getModelTypeForResolver(modelInputType),
+          type: isArray ? new graphqlTypes.GraphQLList(modelType) : modelType,
         };
       }
     });

@@ -125,8 +125,13 @@ export function GraphQlAuth(func: Function) {
  * Decorator to set metadata for param of resolver.
  * @param args
  */
-export function GraphQlParam(options: GraphQLParamOptions) {
-  return (target: any, key: string): any => {
-    Reflect.defineMetadata(GRAPHQL_RESOLVER_PARAM, options, target, key);
+export function GraphQlParam(options: GraphQLParamOptions): any {
+  return (target: any, key: string, index: number): any => {
+    const params: any[] = Reflect.getOwnMetadata(GRAPHQL_RESOLVER_AUTH, target, key) || [];
+    params.push({
+      index,
+      options,
+    });
+    Reflect.defineMetadata(GRAPHQL_RESOLVER_PARAM, params, target, key);
   };
 }
