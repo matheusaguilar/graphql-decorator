@@ -4,9 +4,9 @@
 
 GraphQl is awesome, but create schemas are boring. In this project I try to do your life easier with the Decorators of Typescript.
 
-The idea to solve this problem of creating a schema is:
+To solve this, we need:
 
-* Have model classes to define how the schema will be.
+* Model class to define how the schema will be.
 * Resolver class to create query/mutations.
 * A function defined by you that, given a model with an Id, how do you retrive all the data related with this model? 
 
