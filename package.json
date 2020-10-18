@@ -1,9 +1,21 @@
 {
   "name": "@magn/graphql-decorator",
   "version": "1.0.0",
-  "description": "",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
+  "description": "GraphQL Decorators to use with Typescript to create the schemas automatically.",
+  "keywords": ["Typescript", "typescript", "GraphQL", "graphql", "Decorator", "decorator"],
+  "author": "Matheus Catarino de Aguilar <matcatarino@yahoo.com.br>",
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matheusaguilar/graphql-decorator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/matheusaguilar/graphql-decorator/issues"
+  },
+  "homepage": "https://matheusaguilar.github.io/graphql-decorator/",
   "scripts": {
     "clean": "gulp",
     "build": "npm run clean && tsc",
@@ -11,9 +23,6 @@
     "commit": "git-cz",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "Matheus Catarino de Aguilar",
-  "license": "ISC",
   "dependencies": {},
   "devDependencies": {
     "graphql": "^15.1.0",
