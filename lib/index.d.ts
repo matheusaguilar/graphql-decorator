@@ -1,4 +1,4 @@
 import 'reflect-metadata';
-export { graphQlModel, graphQlPk, graphQlColumn, graphQlFk, graphQlQuery, graphQlMutation, graphQlNext, } from './Decorators';
+export { GraphQlModel, GraphQlPk, GraphQlColumn, GraphQlFk, GraphQlQuery, GraphQlMutation, GraphQlAuth, GraphQlParam, } from './Decorators';
 export { SchemaBuilder } from './SchemaBuilder';
 export { ResContext } from './ResContext';

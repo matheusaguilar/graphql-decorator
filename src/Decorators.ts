@@ -6,15 +6,20 @@ export const GRAPHQL_MODEL_COLUMN = `${reflectPrefix}_property`;
 export const GRAPHQL_RESOLVER_QUERY = `${reflectPrefix}_query`;
 export const GRAPHQL_RESOLVER_MUTATION = `${reflectPrefix}_mutation`;
 export const GRAPHQL_RESOLVER_RETURN = `${reflectPrefix}_return`;
-export const GRAPHQL_RESOLVER_NEXT = `${reflectPrefix}_next`;
+export const GRAPHQL_RESOLVER_AUTH = `${reflectPrefix}_auth`;
+export const GRAPHQL_RESOLVER_PARAM = `${reflectPrefix}_param`;
 export const GRAPHQL_MODEL_FIELDS = `${reflectPrefix}_model_fields`;
 
 /**
  * Arguments for query and mutation decorator.
  */
-interface GraphQLQueryMutationArg {
+interface GraphQLResolverOptions {
   return: any;
   name?: string;
+}
+
+interface GraphQLParamOptions {
+  type: any;
 }
 
 function defineFields(target: any, key: any) {
@@ -27,7 +32,7 @@ function defineFields(target: any, key: any) {
  * Decorator to set metadata for model.
  * @param name
  */
-export function graphQlModel() {
+export function GraphQlModel() {
   return (target: any) => {
     Reflect.defineMetadata(GRAPHQL_MODEL_ENTITY, target.name, target.prototype);
   };
@@ -38,7 +43,7 @@ export function graphQlModel() {
  * @param target
  * @param key
  */
-export function graphQlPk() {
+export function GraphQlPk() {
   return (target: any, key: string): any => {
     defineFields(target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_PK, true, target, key);
@@ -51,7 +56,7 @@ export function graphQlPk() {
  * @param target
  * @param key
  */
-export function graphQlColumn() {
+export function GraphQlColumn() {
   return (target: any, key: string): any => {
     defineFields(target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, key, target, key);
@@ -63,7 +68,7 @@ export function graphQlColumn() {
  * @param target
  * @param key
  */
-export function graphQlFk(type: () => any) {
+export function GraphQlFk(type: () => any) {
   return (target: any, key: string): any => {
     defineFields(target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_FK, type, target, key);
@@ -86,7 +91,7 @@ function defineReturnType(target: any, key: any, type: any) {
  * Decorator to set metadata for resolver.
  * @param args
  */
-export function graphQlQuery(args: GraphQLQueryMutationArg) {
+export function GraphQlQuery(args: GraphQLResolverOptions) {
   return (target: any, key: string): any => {
     Reflect.defineMetadata(GRAPHQL_RESOLVER_QUERY, args.name ? args.name : key, target, key);
     defineReturnType(target, key, args.return);
@@ -97,7 +102,7 @@ export function graphQlQuery(args: GraphQLQueryMutationArg) {
  * Decorator to set metadata for resolver.
  * @param args
  */
-export function graphQlMutation(args: GraphQLQueryMutationArg) {
+export function GraphQlMutation(args: GraphQLResolverOptions) {
   return (target: any, key: string): any => {
     Reflect.defineMetadata(GRAPHQL_RESOLVER_MUTATION, args.name ? args.name : key, target, key);
     defineReturnType(target, key, args.return);
@@ -108,10 +113,20 @@ export function graphQlMutation(args: GraphQLQueryMutationArg) {
  * Decorator to set metadata for resolver.
  * @param args
  */
-export function graphQlNext(func: Function) {
+export function GraphQlAuth(func: Function) {
   return (target: any, key: string): any => {
-    const methods: any[] = Reflect.getOwnMetadata(GRAPHQL_RESOLVER_NEXT, target, key) || [];
+    const methods: any[] = Reflect.getOwnMetadata(GRAPHQL_RESOLVER_AUTH, target, key) || [];
     methods.unshift(func);
-    Reflect.defineMetadata(GRAPHQL_RESOLVER_NEXT, methods, target, key);
+    Reflect.defineMetadata(GRAPHQL_RESOLVER_AUTH, methods, target, key);
+  };
+}
+
+/**
+ * Decorator to set metadata for param of resolver.
+ * @param args
+ */
+export function GraphQlParam(options: GraphQLParamOptions) {
+  return (target: any, key: string): any => {
+    Reflect.defineMetadata(GRAPHQL_RESOLVER_PARAM, options, target, key);
   };
 }

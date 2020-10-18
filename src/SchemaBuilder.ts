@@ -3,8 +3,9 @@ import {
   GRAPHQL_MODEL_ENTITY,
   GRAPHQL_RESOLVER_QUERY,
   GRAPHQL_RESOLVER_MUTATION,
-  GRAPHQL_RESOLVER_NEXT,
+  GRAPHQL_RESOLVER_AUTH,
   GRAPHQL_RESOLVER_RETURN,
+  GRAPHQL_RESOLVER_PARAM,
 } from './Decorators';
 import { getGraphQLBasicType, isGraphQLscalarType } from './GraphQlType';
 import { getGraphQLModel } from './GraphQlModelCreator';
@@ -180,7 +181,7 @@ export class SchemaBuilder {
 
         // execute the function in resolver to return a response for graphql
         queryFields[queryName].resolve = (_, args, context) => {
-          if (this.validateNextFunctions(resolver, method, context)) {
+          if (this.validateAuthFunctions(resolver, method, context)) {
             const argsAsArray = this.getResolverArgsArray(
               hasArgs,
               args,
@@ -227,7 +228,7 @@ export class SchemaBuilder {
 
         // execute the function in resolver to return a response for graphql
         mutationFields[queryName].resolve = (_, args, context) => {
-          if (this.validateNextFunctions(resolver, method, context)) {
+          if (this.validateAuthFunctions(resolver, method, context)) {
             const argsAsArray = this.getResolverArgsArray(
               hasArgs,
               args,
@@ -257,11 +258,11 @@ export class SchemaBuilder {
   /**
    * call next functions before call resolver
    */
-  private validateNextFunctions(resolver, method, context): boolean {
+  private validateAuthFunctions(resolver, method, context): boolean {
     let count = 0;
     const funcs = [];
-    if (Reflect.hasMetadata(GRAPHQL_RESOLVER_NEXT, resolver, method)) {
-      const next = Reflect.getMetadata(GRAPHQL_RESOLVER_NEXT, resolver, method);
+    if (Reflect.hasMetadata(GRAPHQL_RESOLVER_AUTH, resolver, method)) {
+      const next = Reflect.getMetadata(GRAPHQL_RESOLVER_AUTH, resolver, method);
       if (next) {
         // add all validation next functions
         funcs.push(...next);
@@ -304,8 +305,11 @@ export class SchemaBuilder {
     const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
 
     argNames.forEach((arg, index) => {
+      // const options = Reflect.getMetadata(GRAPHQL_RESOLVER_PARAM, resolver[method], arg);
+      // console.log(options);
+
+      // not ResContext
       if (pArgs[index].name.toLowerCase() !== 'ResContext'.toLowerCase()) {
-        // not ResContext
         const modelInputType = getGraphQLModel(new pArgs[index](), this.resolverModelFunction);
         const type = getGraphQLBasicType(pArgs[index].name);
         args[arg] = {

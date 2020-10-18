@@ -55,7 +55,7 @@ export declare class SchemaBuilder {
     /**
      * call next functions before call resolver
      */
-    private validateNextFunctions;
+    private validateAuthFunctions;
     /**
      * return graphQL arg types for function arguments in queries and mutations.
      * @param resolver
