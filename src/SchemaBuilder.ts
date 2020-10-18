@@ -9,7 +9,6 @@ import {
 } from './Decorators';
 import { getGraphQLBasicType, isGraphQLscalarType } from './GraphQlType';
 import { getGraphQLModel } from './GraphQlModelCreator';
-import { FillModelUtil } from './FillModelUtil';
 
 export class SchemaBuilder {
   private resolverInstances = [];
@@ -128,22 +127,11 @@ export class SchemaBuilder {
    * @param context
    * @param argsLength
    */
-  private getResolverArgsArray(hasArgs, args, resolver, method, context, argsLength) {
+  private getResolverArgsArray(hasArgs, args, context, argsLength) {
     const argsAsArray = [];
     if (hasArgs) {
-      const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
-
-      Object.keys(args).forEach((arg, index) => {
-        if (!getGraphQLBasicType(pArgs[index].name)) {
-          argsAsArray.push(
-            FillModelUtil.fillModelFromRequest(
-              args[arg],
-              this.getModelForFillAsArg(pArgs[index].name.toLowerCase())
-            )
-          );
-        } else {
-          argsAsArray.push(args[arg]);
-        }
+      Object.keys(args).forEach((arg) => {
+        argsAsArray.push(args[arg]);
       });
 
       for (let i = argsAsArray.length; i < argsLength; i++) {
@@ -182,14 +170,7 @@ export class SchemaBuilder {
         // execute the function in resolver to return a response for graphql
         queryFields[queryName].resolve = (_, args, context) => {
           if (this.validateAuthFunctions(resolver, method, context)) {
-            const argsAsArray = this.getResolverArgsArray(
-              hasArgs,
-              args,
-              resolver,
-              method,
-              context,
-              argsLength
-            );
+            const argsAsArray = this.getResolverArgsArray(hasArgs, args, context, argsLength);
             return resolver[method].apply(resolver, argsAsArray);
           }
           return null;
@@ -229,14 +210,7 @@ export class SchemaBuilder {
         // execute the function in resolver to return a response for graphql
         mutationFields[queryName].resolve = (_, args, context) => {
           if (this.validateAuthFunctions(resolver, method, context)) {
-            const argsAsArray = this.getResolverArgsArray(
-              hasArgs,
-              args,
-              resolver,
-              method,
-              context,
-              argsLength
-            );
+            const argsAsArray = this.getResolverArgsArray(hasArgs, args, context, argsLength);
             return resolver[method].apply(resolver, argsAsArray);
           }
           return null;
@@ -245,14 +219,6 @@ export class SchemaBuilder {
     }
 
     return mutationFields;
-  }
-
-  /**
-   * return the model for parse the arguments as correct type in resolver.
-   * @param name
-   */
-  private getModelForFillAsArg(name: string) {
-    return this.modelTypesResolver[name];
   }
 
   /**
