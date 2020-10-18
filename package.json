@@ -1,6 +1,6 @@
 {
   "name": "@magn/graphql-decorator",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "description": "GraphQL Decorators to use with Typescript to create the schemas automatically.",
