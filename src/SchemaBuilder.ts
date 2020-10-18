@@ -98,63 +98,6 @@ export class SchemaBuilder {
   }
 
   /**
-   * define the return type for queries and mutations.
-   * @param resolver the resolver class.
-   * @param method the method of resolver (query or mutation)
-   */
-  private defineReturnType(resolver, method) {
-    if (Reflect.hasMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method)) {
-      let typeReturn = Reflect.getMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method);
-      if (Array.isArray(typeReturn)) {
-        return new graphqlTypes.GraphQLList(
-          getGraphQLModel(new typeReturn[0](), this.resolverModelFunction)
-        );
-      } else {
-        const basicType = getGraphQLBasicType(typeReturn.name);
-        return basicType
-          ? basicType
-          : getGraphQLModel(new typeReturn(), this.resolverModelFunction);
-      }
-    }
-    return null;
-  }
-
-  /**
-   * return the array of arguments to be called with resolver method.
-   * @param hasArgs
-   * @param args
-   * @param resolver
-   * @param method
-   * @param context
-   * @param argsLength
-   */
-  private getResolverArgsArray(hasArgs, args, resolver, method, context, argsLength) {
-    const argsAsArray = [];
-    if (hasArgs) {
-      const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
-
-      Object.keys(args).forEach((arg, index) => {
-        if (!getGraphQLBasicType(pArgs[index].name)) {
-          argsAsArray.push(
-            FillModelUtil.fillModelFromRequest(
-              args[arg],
-              this.getModelForFillAsArg(pArgs[index].name.toLowerCase())
-            )
-          );
-        } else {
-          argsAsArray.push(args[arg]);
-        }
-      });
-
-      for (let i = argsAsArray.length; i < argsLength; i++) {
-        argsAsArray.push(null);
-      }
-    }
-    argsAsArray.push(context);
-    return argsAsArray;
-  }
-
-  /**
    * create queries for every resolver.
    * @param resolver the resolver.
    * @param modelType the modelType of resolver.
@@ -248,11 +191,88 @@ export class SchemaBuilder {
   }
 
   /**
+   * define the return type for queries and mutations.
+   * @param resolver the resolver class.
+   * @param method the method of resolver (query or mutation)
+   */
+  private defineReturnType(resolver, method) {
+    if (Reflect.hasMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method)) {
+      let typeReturn = Reflect.getMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method);
+      if (Array.isArray(typeReturn)) {
+        return new graphqlTypes.GraphQLList(
+          getGraphQLModel(new typeReturn[0](), this.resolverModelFunction)
+        );
+      } else {
+        const basicType = getGraphQLBasicType(typeReturn.name);
+        return basicType
+          ? basicType
+          : getGraphQLModel(new typeReturn(), this.resolverModelFunction);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * return the array of arguments to be called with resolver method.
+   * @param hasArgs
+   * @param args
+   * @param resolver
+   * @param method
+   * @param context
+   * @param argsLength
+   */
+  private getResolverArgsArray(hasArgs, args, resolver, method, context, argsLength) {
+    const argsAsArray = [];
+    if (hasArgs) {
+      const pArgs = Reflect.getMetadata('design:paramtypes', resolver, method);
+      const options = Reflect.getMetadata(GRAPHQL_RESOLVER_PARAM, resolver, method);
+
+      Object.keys(args).forEach((arg, index) => {
+        if (!getGraphQLBasicType(pArgs[index].name)) {
+          const optionsArg = this.paramHasOptions(options, index);
+          let modelType = optionsArg
+            ? optionsArg.type
+            : this.getModelForFillAsArg(pArgs[index].name.toLowerCase());
+
+          if (Array.isArray(modelType)) {
+            modelType = modelType[0];
+            const argResult = [];
+            args[arg]?.forEach((argParam) => {
+              argResult.push(FillModelUtil.fillModelFromRequest(argParam, modelType));
+            });
+            argsAsArray.push(argResult);
+          } else {
+            argsAsArray.push(FillModelUtil.fillModelFromRequest(args[arg], modelType));
+          }
+        } else {
+          argsAsArray.push(args[arg]);
+        }
+      });
+
+      for (let i = argsAsArray.length; i < argsLength; i++) {
+        argsAsArray.push(null);
+      }
+    }
+    argsAsArray.push(context);
+    return argsAsArray;
+  }
+
+  /**
    * return the model for parse the arguments as correct type in resolver.
    * @param name
    */
   private getModelForFillAsArg(name: string) {
     return this.modelTypesResolver[name];
+  }
+
+  /**
+   * check if param of the function has options set
+   * @param options
+   * @param index
+   */
+  private paramHasOptions(options, index) {
+    const option = options?.find((opt) => opt.index === index);
+    return option ? option.options : null;
   }
 
   /**
@@ -307,17 +327,10 @@ export class SchemaBuilder {
 
     argNames.forEach((arg, index) => {
       if (pArgs[index].name.toLowerCase() !== 'ResContext'.toLowerCase()) {
-        let optionsArg = null;
-        let modelType = null;
+        const optionsArg = this.paramHasOptions(options, index);
+        let modelType = optionsArg ? optionsArg.type : pArgs[index];
         let isArray = false;
 
-        options?.forEach((opt) => {
-          if (opt.index === index) {
-            optionsArg = opt.options;
-          }
-        });
-
-        modelType = optionsArg ? optionsArg.type : pArgs[index];
         if (Array.isArray(modelType)) {
           modelType = modelType[0];
           isArray = true;

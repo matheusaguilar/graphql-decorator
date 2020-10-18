@@ -2,9 +2,13 @@
 
 [GraphQlPage](https://matheusaguilar.github.io/graphql-decorator/)
 
-GraphQl is awesome, but create schemas are boring. In this project I try to do your life easier with Decorators of Typescript.
+GraphQl is awesome, but create schemas are boring. In this project I try to do your life easier with the Decorators of Typescript.
 
-What you need? Only a model and resolver.
+To solve this, we need:
+
+* Model class to define how the schema will be.
+* Resolver class to create query/mutations.
+* A function defined by you that, given a model with an Id, how do you retrive all the data related with this model? 
 
 First of all, we need to know the types that we can use, we have Basic types and Model types.
 
@@ -26,7 +30,7 @@ For models we have the decorators:
 ```javascript
 import { GraphQlModel, GraphQlPk, GraphQlFk, GraphQlColumn } from 'graphql-decorator/lib';
 
-@graphQlModel()
+@GraphQlModel()
 export class State {
   @GraphQlPk()
   public id: number;
@@ -38,7 +42,7 @@ export class State {
   public initial: string;
 }
 
-@graphQlModel()
+@GraphQlModel()
 export class City {
   @GraphQlPk()
   public id: number;
@@ -85,7 +89,7 @@ export class ResolverQueryExample {
 
 ```javascript
 export class ResolverMutationExample {
-  @graphQlMutation({
+  @GraphQlMutation({
     return: Boolean
   })
   async createCity(city: City) {
