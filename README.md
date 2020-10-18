@@ -10,43 +10,43 @@ First of all, we need to know the types that we can use, we have Basic types and
 
 Basic types: **String, Number** and **Boolean**
 
-Model Types: Are the models that's decorated with **@graphQlModel()** 
+Model Types: Are the models that's decorated with **@GraphQlModel()** 
 
 ### Models
 For models we have the decorators:
 
-**@graphQlModel**: Defines a model type of graphQL.
+**@GraphQlModel**: Defines a model type of graphQL.
 
-**@graphQlPk**: Defines the attribute that's used to resolve this model.
+**@GraphQlPk**: Defines the attribute that's used to resolve this model.
 
-**@graphQlColumn**: Defines one attribute of the model.
+**@GraphQlColumn**: Defines one attribute of the model.
 
-**@graphQlFk**: Define a foreign model that will need be resolved.
+**@GraphQlFk**: Define a foreign model that will need be resolved.
 
 ```javascript
-import { graphQlModel, graphQlPk, graphQlFk, graphQlColumn } from 'graphql-decorator/lib';
+import { GraphQlModel, GraphQlPk, GraphQlFk, GraphQlColumn } from 'graphql-decorator/lib';
 
 @graphQlModel()
 export class State {
-  @graphQlPk()
+  @GraphQlPk()
   public id: number;
 
-  @graphQlColumn()
+  @GraphQlColumn()
   public name: string;
 
-  @graphQlColumn()
+  @GraphQlColumn()
   public initial: string;
 }
 
 @graphQlModel()
 export class City {
-  @graphQlPk()
+  @GraphQlPk()
   public id: number;
 
-  @graphQlColumn()
+  @GraphQlColumn()
   public name: string;
 
-  @graphQlFk()
+  @GraphQlFk(() => State)
   public state: State;
 }
 ```
@@ -54,16 +54,16 @@ export class City {
 ### Resolvers
 Resolvers have decorators for functions of the class:
 
-**@graphQlQuery**: Create a GraphQL query.
+**@GraphQlQuery**: Create a GraphQL query.
 
 | Arguments  |  Description  |
 | ------------------- | ------------------- |
-|  return |  Define the type of the return of the query. Can be any one of the types: **String, Number, Boolean** or Some Model(**@graphQlModel**) |
+|  return |  Define the type of the return of the query. Can be any one of the types: **String, Number, Boolean** or Some Model(**@GraphQlModel**) |
 |  name? |  Define the name of the query that will be created, if not provided the query will use the function name. |
 
 ```javascript
 export class ResolverQueryExample {
-  @graphQlQuery({
+  @GraphQlQuery({
     name: 'queryCity'
     return: City
   })
@@ -76,11 +76,11 @@ export class ResolverQueryExample {
 }
 ```
 
-**@graphQlMutation**: Create a GraphQL mutation.
+**@GraphQlMutation**: Create a GraphQL mutation.
 
 | Arguments  |  Description  |
 | ------------------- | ------------------- |
-|  return |  Define the type of the return of the query. Can be any one of the types: **String, Number, Boolean** or Some Model(**@graphQlModel**) |
+|  return |  Define the type of the return of the query. Can be any one of the types: **String, Number, Boolean** or Some Model(**@GraphQlModel**) |
 |  name? |  Define the name of the mutation that will be created, if not provided the query will use the function name. |
 
 ```javascript
@@ -95,7 +95,7 @@ export class ResolverMutationExample {
 }
 ```
 
-**@graphQlNext**: Can be used to validate a GraphQL query or mutation, like express next function. This will be called before the query/mutation and if doesn't call the next() the query/mutation not will be triggered.
+**@GraphQlAuth**: Can be used to validate a GraphQL query or mutation, like express next function. This will be called before the query/mutation and if doesn't call the next() the query/mutation not will be triggered.
 
 | Arguments  |  Description  |
 | ------------------- | ------------------- |
@@ -110,8 +110,8 @@ function validateUserRole(req, res, next) {
 }
 
 export class ResolverNextExample {
-  @graphQlNext(validateUserRole)
-  @graphQlQuery({
+  @GraphQlAuth(validateUserRole)
+  @GraphQlQuery({
     return: [City]
   })
   async getAllCitiesByState(state: State) {
@@ -124,17 +124,28 @@ export class ResolverNextExample {
 ### How to use Arrays as type
 At the moment, typescript don't support in Reflection to get the type of an Array. To bypass this, I defined an Array with the type inside it:
 ```javascript
-@graphQlQuery({
+@GraphQlQuery({
   return: [Type]
 })
 ```
+
+```javascript
+@GraphQlQuery({
+  return: [Type]
+})
+async getExample(@GraphQlParam({ type: [Type] }) example: Type[]) {
+  // code ...
+  return ;
+}
+```
+
 ### ResContext
 When creating a query or mutation maybe you need the request/response of the request, to get that you just need to put some argument with the type ResContext.
 
 ```javascript
 import { ResContext } from 'graphql-decorator/lib';
 
-@graphQlQuery({
+@GraphQlQuery({
   return: [Type]
 })
 async exampleQuery(city: City, state: State, context: ResContext) {
@@ -153,34 +164,34 @@ On the constructor of this class you need to pass a function that will resolve a
 import * as http from 'http';
 import express from 'express';
 import graphqlHTTP from 'express-graphql';
-import { graphQlModel, graphQlPk, graphQlFk, graphQlColumn, graphQlQuery } from 'graphql-decorator/lib';
+import { GraphQlModel, GraphQlPk, GraphQlFk, GraphQlColumn, GraphQlQuery } from 'graphql-decorator';
 
-@graphQlModel()
+@GraphQlModel()
 export class State {
-  @graphQlPk()
+  @GraphQlPk()
   public id: number = null;
 
-  @graphQlColumn()
+  @GraphQlColumn()
   public name: string = null;
 
-  @graphQlColumn()
+  @GraphQlColumn()
   public initial: string = null;
 }
 
-@graphQlModel()
+@GraphQlModel()
 export class City {
-  @graphQlPk()
+  @GraphQlPk()
   public id: number = null;
 
-  @graphQlColumn()
+  @GraphQlColumn()
   public name: string = null;
 
-  @graphQlFk()
+  @GraphQlFk(() => State)
   public state: State = null;
 }
 
 export class ResolverExample {
-  @graphQlQuery({
+  @GraphQlQuery({
     return: City
   })
   async getCity(cityId: number) {

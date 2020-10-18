@@ -1,5 +1,5 @@
 {
-  "name": "graphql-decorator",
+  "name": "@magn/graphql-decorator",
   "version": "1.0.0",
   "description": "",
   "main": "./lib/index.js",
@@ -32,6 +32,10 @@
     "reflect-metadata": "^0.1.13",
     "typescript": "^3.8.3",
     "validate-commit-msg": "^2.14.0"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "0.x",
+    "graphql": "15.x"
   },
   "config": {
     "commitizen": {
