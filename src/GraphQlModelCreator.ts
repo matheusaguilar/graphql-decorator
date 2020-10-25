@@ -6,11 +6,13 @@ import {
   GRAPHQL_MODEL_COLUMN,
   GRAPHQL_MODEL_FK,
   GRAPHQL_MODEL_FIELDS,
+  GRAPHQL_MODEL_FK_NAME,
 } from './Decorators';
 
 const reflectPrefix = 'graphql_model_creator';
 const GRAPHQL_TYPE = `${reflectPrefix}_type`;
 const GRAPHQL_FK = `${reflectPrefix}_type_fk`;
+const GRAPHQL_FK_ID_COLUMN = `${reflectPrefix}_type_fk_idcolumn`;
 const graphQLModelTypes = {};
 
 /**
@@ -46,10 +48,11 @@ function defineColumn(target: any, key: any) {
  * @param target
  * @param key
  */
-function defineFK(target: any, key: any, type: any) {
+function defineFK(target: any, key: any, type: any, idColumnFk: any) {
   const nameFkColumn: any = Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, target, key);
   Reflect.defineMetadata(GRAPHQL_FK, nameFkColumn, target, key);
   Reflect.defineMetadata(GRAPHQL_TYPE, type, target, key);
+  Reflect.defineMetadata(GRAPHQL_FK_ID_COLUMN, idColumnFk, target, key);
 }
 
 /**
@@ -62,45 +65,30 @@ function defineFK(target: any, key: any, type: any) {
  * @param arg the argument received.
  * @param key the name of column of arg that match the classType instance.
  */
-function resolve(classType: any, arg: any, key: any) {
+function resolve(classType: any, arg: any, key: any, fkIdColumn: any) {
   const fkInstance = new classType();
   let fkModel = arg[key];
   let hasPk;
-  const modelKeys = Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, fkInstance);
 
-  // if format 2
-  if (!fkModel) {
-    for (const fkKey of modelKeys) {
-      if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
-        hasPk = fkKey;
-        let argKey = fkKey;
-        argKey =
-          fkInstance.constructor.name.toLowerCase() +
-          argKey.charAt(0).toUpperCase() +
-          argKey.slice(1);
-        fkModel = arg[argKey];
-      }
+  Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, fkInstance)?.forEach((fkKey) => {
+    if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
+      hasPk = fkKey;
     }
-  }
+  });
 
-  if (fkModel) {
-    // format 2
-    if (hasPk) {
-      fkInstance[hasPk] = fkModel;
-    } else {
+  if (hasPk) {
+    if (fkIdColumn) {
+      // format 2
+      fkInstance[hasPk] = arg[fkIdColumn];
+      return fkInstance;
+    } else if (fkModel) {
       // format 1
-      for (const fkKey of modelKeys) {
-        if (fkModel[fkKey]) {
-          if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, fkInstance, fkKey)) {
-            hasPk = true;
-          }
-          fkInstance[fkKey] = fkModel[fkKey];
-        }
-      }
+      fkInstance[hasPk] = fkModel[hasPk];
+      return fkInstance;
     }
   }
 
-  return hasPk ? fkInstance : null;
+  return null;
 }
 
 /**
@@ -128,7 +116,8 @@ export function getGraphQLModel(
           definePK(instance, key);
         } else if (Reflect.hasMetadata(GRAPHQL_MODEL_FK, instance, key)) {
           const typeClassFk = Reflect.getMetadata(GRAPHQL_MODEL_FK, instance, key);
-          defineFK(instance, key, typeClassFk());
+          const idColumnFk = Reflect.getMetadata(GRAPHQL_MODEL_FK_NAME, instance, key);
+          defineFK(instance, key, typeClassFk(), idColumnFk);
         } else if (Reflect.hasMetadata(GRAPHQL_MODEL_COLUMN, instance, key)) {
           defineColumn(instance, key);
         }
@@ -142,10 +131,11 @@ export function getGraphQLModel(
             const fkType = new graphqlTypes.GraphQLList(
               getGraphQLModel(new fkTypeClass(), resolveFunction)
             );
+            const fkIdColumn = Reflect.getMetadata(GRAPHQL_FK_ID_COLUMN, instance, key);
             type.fields[key] = {
               type: fkType.ofType,
               resolve: (arg) => {
-                return resolveFunction(resolve(fkTypeClass, arg, key));
+                return resolveFunction(resolve(fkTypeClass, arg, key, fkIdColumn));
               },
             };
           } else {

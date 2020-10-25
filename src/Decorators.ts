@@ -2,6 +2,7 @@ const reflectPrefix = 'graphql_decorators';
 export const GRAPHQL_MODEL_ENTITY = `${reflectPrefix}_entity`;
 export const GRAPHQL_MODEL_PK = `${reflectPrefix}_pk`;
 export const GRAPHQL_MODEL_FK = `${reflectPrefix}_fk`;
+export const GRAPHQL_MODEL_FK_NAME = `${reflectPrefix}_fk_name`;
 export const GRAPHQL_MODEL_COLUMN = `${reflectPrefix}_property`;
 export const GRAPHQL_RESOLVER_QUERY = `${reflectPrefix}_query`;
 export const GRAPHQL_RESOLVER_MUTATION = `${reflectPrefix}_mutation`;
@@ -68,10 +69,16 @@ export function GraphQlColumn() {
  * @param target
  * @param key
  */
-export function GraphQlFk(type: () => any) {
+interface FkOptions {
+  type: () => any;
+  idColumn?: string;
+}
+
+export function GraphQlFk(options: FkOptions) {
   return (target: any, key: string): any => {
     defineFields(target, key);
-    Reflect.defineMetadata(GRAPHQL_MODEL_FK, type, target, key);
+    Reflect.defineMetadata(GRAPHQL_MODEL_FK, options.type, target, key);
+    Reflect.defineMetadata(GRAPHQL_MODEL_FK_NAME, options.idColumn, target, key);
     Reflect.defineMetadata(GRAPHQL_MODEL_COLUMN, key, target, key);
   };
 }
