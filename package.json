@@ -4,7 +4,14 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "description": "GraphQL Decorators to use with Typescript to create the schemas automatically.",
-  "keywords": ["Typescript", "typescript", "GraphQL", "graphql", "Decorator", "decorator"],
+  "keywords": [
+    "Typescript",
+    "typescript",
+    "GraphQL",
+    "graphql",
+    "Decorator",
+    "decorator"
+  ],
   "author": "Matheus Catarino de Aguilar <matcatarino@yahoo.com.br>",
   "license": "MIT",
   "private": false,

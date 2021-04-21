@@ -8,7 +8,7 @@ import {
   GRAPHQL_RESOLVER_PARAM,
 } from './Decorators';
 import { getGraphQLBasicType, isGraphQLscalarType } from './GraphQlType';
-import { getGraphQLModel } from './GraphQlModelCreator';
+import { getGraphQLModel, getGraphQLModelBasic } from './GraphQlModelCreator';
 import { FillModelUtil } from './FillModelUtil';
 
 export class SchemaBuilder {
@@ -26,6 +26,14 @@ export class SchemaBuilder {
    * @param models
    */
   registerModels(models: (new () => any)[]) {
+    // initialize all model basics
+    for (const model of models) {
+      const modelInstance = new model();
+      if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
+        getGraphQLModelBasic(modelInstance);
+      }
+    }
+
     for (const model of models) {
       const modelInstance = new model();
       if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
