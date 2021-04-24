@@ -1,20 +1,23 @@
 import * as graphqlTypes from 'graphql';
 import {
-  GRAPHQL_MODEL_ENTITY,
   GRAPHQL_RESOLVER_QUERY,
   GRAPHQL_RESOLVER_MUTATION,
   GRAPHQL_RESOLVER_AUTH,
   GRAPHQL_RESOLVER_RETURN,
   GRAPHQL_RESOLVER_PARAM,
 } from './Decorators';
-import { getGraphQLBasicType, isGraphQLscalarType } from './GraphQlType';
-import { getGraphQLModel, getGraphQLModelBasic } from './GraphQlModelCreator';
+import { getGraphQLBasicType } from './GraphQlType';
+import {
+  createGraphQLModels,
+  createGraphQLInputModels,
+  getGraphQLModel,
+  getGraphQLInputModel,
+} from './GraphQlModelCreator';
 import { FillModelUtil } from './FillModelUtil';
 
 export class SchemaBuilder {
   private resolverInstances = [];
   private modelTypesResolver = {};
-  private inputModelTypes = {};
   private resolverModelFunction = null;
 
   constructor(resolver: (model: any) => any) {
@@ -26,22 +29,10 @@ export class SchemaBuilder {
    * @param models
    */
   registerModels(models: (new () => any)[]) {
-    // initialize all model basics
-    for (const model of models) {
-      const modelInstance = new model();
-      if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
-        getGraphQLModelBasic(modelInstance);
-      }
-    }
+    // initialize all models
+    const graphQLModels = createGraphQLModels(models, this.resolverModelFunction);
+    createGraphQLInputModels(graphQLModels);
 
-    for (const model of models) {
-      const modelInstance = new model();
-      if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
-        const modelType = getGraphQLModel(modelInstance, this.resolverModelFunction);
-        this.modelTypesResolver[model.name.toLowerCase()] = model;
-        this.createModelTypeForResolver(modelType);
-      }
-    }
     return this;
   }
 
@@ -101,7 +92,7 @@ export class SchemaBuilder {
 
     // clear objects
     this.resolverInstances = null;
-    this.inputModelTypes = null;
+    // this.inputModelTypes = null;
     return new graphqlTypes.GraphQLSchema(schema);
   }
 
@@ -207,14 +198,10 @@ export class SchemaBuilder {
     if (Reflect.hasMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method)) {
       let typeReturn = Reflect.getMetadata(GRAPHQL_RESOLVER_RETURN, resolver, method);
       if (Array.isArray(typeReturn)) {
-        return new graphqlTypes.GraphQLList(
-          getGraphQLModel(new typeReturn[0](), this.resolverModelFunction)
-        );
+        return new graphqlTypes.GraphQLList(getGraphQLModel(new typeReturn[0]()));
       } else {
         const basicType = getGraphQLBasicType(typeReturn.name);
-        return basicType
-          ? basicType
-          : getGraphQLModel(new typeReturn(), this.resolverModelFunction);
+        return basicType ? basicType : getGraphQLModel(new typeReturn());
       }
     }
     return null;
@@ -348,8 +335,7 @@ export class SchemaBuilder {
         if (type) {
           modelType = type;
         } else {
-          const modelInputType = getGraphQLModel(new modelType(), this.resolverModelFunction);
-          modelType = this.getModelTypeForResolver(modelInputType);
+          modelType = getGraphQLInputModel(new modelType());
         }
 
         args[arg] = {
@@ -359,60 +345,6 @@ export class SchemaBuilder {
     });
 
     return args;
-  }
-
-  /**
-   * create model type input for resolver if not exists.
-   * @param resolver
-   * @param modelType
-   */
-  private createModelTypeForResolver(modelType) {
-    return this.createModelTypeInput(modelType);
-  }
-
-  /**
-   * return the model type input for resolver.
-   * @param modelType
-   */
-  private getModelTypeForResolver(modelType) {
-    return this.inputModelTypes[modelType.name.toLowerCase()];
-  }
-
-  /**
-   * if an argument has object type, create an GraphQLInputObjectType to be the type.
-   * @param modelType
-   */
-  private createModelTypeInput(modelType) {
-    if (modelType) {
-      if (!this.inputModelTypes[modelType.name.toLowerCase()]) {
-        const fields = {};
-        for (const key of Object.keys(modelType.getFields())) {
-          let type = null;
-
-          if (isGraphQLscalarType(modelType.getFields()[key].type)) {
-            type = modelType.getFields()[key].type;
-          } else {
-            type = this.createModelTypeInput(modelType.getFields()[key].type);
-          }
-
-          fields[key] = {
-            // type: new graphqlTypes.GraphQLNonNull(modelType.getFields()[key].type)
-            type,
-          };
-        }
-
-        this.inputModelTypes[
-          modelType.name.toLowerCase()
-        ] = new graphqlTypes.GraphQLInputObjectType({
-          name: `input${modelType.name}`,
-          fields: () => fields,
-        });
-      }
-
-      return this.inputModelTypes[modelType.name.toLowerCase()];
-    }
-
-    return null;
   }
 
   /**

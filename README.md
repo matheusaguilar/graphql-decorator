@@ -137,7 +137,7 @@ At the moment, typescript don't support in Reflection to get the type of an Arra
 @GraphQlQuery({
   return: [Type]
 })
-async getExample(@GraphQlParam({ type: [Type] }) example: Type[]) {
+async getExample(example: Type[]) {
   // code ...
   return ;
 }

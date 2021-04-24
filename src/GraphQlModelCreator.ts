@@ -1,5 +1,5 @@
 import * as graphqlTypes from 'graphql';
-import { getGraphQLBasicType } from './GraphQlType';
+import { getGraphQLBasicType, isGraphQLscalarType } from './GraphQlType';
 import {
   GRAPHQL_MODEL_ENTITY,
   GRAPHQL_MODEL_PK,
@@ -9,11 +9,8 @@ import {
   GRAPHQL_MODEL_FK_NAME,
 } from './Decorators';
 
-const reflectPrefix = 'graphql_model_creator';
-const GRAPHQL_TYPE = `${reflectPrefix}_type`;
-const GRAPHQL_FK = `${reflectPrefix}_type_fk`;
-const GRAPHQL_FK_ID_COLUMN = `${reflectPrefix}_type_fk_idcolumn`;
 const graphQLModelTypes = {};
+const graphQLInputModelTypes = {};
 const graphQLBasicModelTypes = {};
 
 /**
@@ -24,36 +21,6 @@ const graphQLBasicModelTypes = {};
 function getGraphQLType(target, arg) {
   const type = Reflect.getMetadata('design:type', target, arg);
   return getGraphQLBasicType(type?.name);
-}
-
-/**
- * define the pk graphql properties.
- * @param target
- * @param key
- */
-function definePK(target: any, key: any) {
-  Reflect.defineMetadata(GRAPHQL_TYPE, getGraphQLType(target, key), target, key);
-}
-
-/**
- * define the column graphql properties.
- * @param target
- * @param key
- */
-function defineColumn(target: any, key: any) {
-  Reflect.defineMetadata(GRAPHQL_TYPE, getGraphQLType(target, key), target, key);
-}
-
-/**
- * define the fk graphql properties.
- * @param target
- * @param key
- */
-function defineFK(target: any, key: any, type: any, idColumnFk: any) {
-  const nameFkColumn: any = Reflect.getMetadata(GRAPHQL_MODEL_COLUMN, target, key);
-  Reflect.defineMetadata(GRAPHQL_FK, nameFkColumn, target, key);
-  Reflect.defineMetadata(GRAPHQL_TYPE, type, target, key);
-  Reflect.defineMetadata(GRAPHQL_FK_ID_COLUMN, idColumnFk, target, key);
 }
 
 /**
@@ -96,65 +63,7 @@ function resolve(classType: any, arg: any, key: any, fkIdColumn: any) {
  * get GraphQL model for an object instance entity.
  * @param instance
  */
-export function getGraphQLModel(instance: any, resolveFunction: (model: any) => any) {
-  let type = null;
-  const fkFields = [];
-
-  if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, instance)) {
-    type = getGraphQLModelBasic(instance);
-    const modelName = type.name.toLowerCase();
-    const modelKeys = Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, instance);
-
-    if (!graphQLModelTypes[modelName]) {
-      for (const key of modelKeys) {
-        if (
-          Reflect.hasMetadata(GRAPHQL_TYPE, instance, key) &&
-          Reflect.hasMetadata(GRAPHQL_FK, instance, key)
-        ) {
-          const fkTypeClass = Reflect.getMetadata(GRAPHQL_TYPE, instance, key);
-          const fkModelBasic = getGraphQLModelBasic(new fkTypeClass());
-          const fkIdColumn = Reflect.getMetadata(GRAPHQL_FK_ID_COLUMN, instance, key);
-
-          fkFields.push({
-            key,
-            type: fkModelBasic,
-            resolve: (arg) => {
-              return resolveFunction(resolve(fkTypeClass, arg, key, fkIdColumn));
-            },
-          });
-        }
-      }
-
-      graphQLModelTypes[modelName] = new graphqlTypes.GraphQLObjectType({
-        name: type.name,
-        fields: () => {
-          let fields = { ...type.fields };
-
-          for (const fk of fkFields) {
-            fields[fk.key] = {
-              type: new graphqlTypes.GraphQLList(new graphqlTypes.GraphQLObjectType(fk.type)),
-              resolve: fk.resolve,
-            };
-          }
-
-          return fields;
-        },
-      });
-    }
-
-    return graphQLModelTypes[modelName];
-  }
-
-  return null;
-}
-
-/**
- * get GraphQL model for an object instance entity.
- * @param instance
- */
-export function getGraphQLModelBasic(
-  instance
-): { name: string; fields: { [key: string]: any } } | null {
+function getGraphQLModelBasic(instance): { name: string; fields: { [key: string]: any } } | null {
   const type = {
     name: null,
     fields: {},
@@ -166,27 +75,13 @@ export function getGraphQLModelBasic(
     const modelKeys = Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, instance);
 
     if (!graphQLBasicModelTypes[modelName]) {
-      // define pk, fk and column graphql metadata
-      for (const key of modelKeys) {
-        if (Reflect.hasMetadata(GRAPHQL_MODEL_PK, instance, key)) {
-          definePK(instance, key);
-        } else if (Reflect.hasMetadata(GRAPHQL_MODEL_FK, instance, key)) {
-          const typeClassFk = Reflect.getMetadata(GRAPHQL_MODEL_FK, instance, key);
-          const idColumnFk = Reflect.getMetadata(GRAPHQL_MODEL_FK_NAME, instance, key);
-          defineFK(instance, key, typeClassFk(), idColumnFk);
-        } else if (Reflect.hasMetadata(GRAPHQL_MODEL_COLUMN, instance, key)) {
-          defineColumn(instance, key);
-        }
-      }
-
-      // define basic types
       for (const key of modelKeys) {
         if (
-          Reflect.hasMetadata(GRAPHQL_TYPE, instance, key) &&
-          !Reflect.hasMetadata(GRAPHQL_FK, instance, key)
+          Reflect.hasMetadata(GRAPHQL_MODEL_PK, instance, key) ||
+          Reflect.hasMetadata(GRAPHQL_MODEL_COLUMN, instance, key)
         ) {
           type.fields[key] = {};
-          type.fields[key].type = Reflect.getMetadata(GRAPHQL_TYPE, instance, key);
+          type.fields[key].type = getGraphQLType(instance, key);
         }
       }
 
@@ -197,4 +92,146 @@ export function getGraphQLModelBasic(
   }
 
   return null;
+}
+
+/**
+ * get GraphQL model for an object instance entity.
+ * @param instance
+ */
+function getGraphQLModels(models: any, resolveFunction: (model: any) => any) {
+  for (const model of models) {
+    const modelInstance = new model();
+
+    if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
+      const type = getGraphQLModelBasic(modelInstance);
+      const modelName = type.name.toLowerCase();
+      const modelKeys = Reflect.getMetadata(GRAPHQL_MODEL_FIELDS, modelInstance);
+      const fkFields = [];
+
+      if (!graphQLModelTypes[modelName]) {
+        for (const key of modelKeys) {
+          if (Reflect.hasMetadata(GRAPHQL_MODEL_FK, modelInstance, key)) {
+            const typeClassFk = Reflect.getMetadata(GRAPHQL_MODEL_FK, modelInstance, key);
+            const fkTypeClass = typeClassFk();
+            const fkModelBasic = getGraphQLModelBasic(new fkTypeClass());
+            const fkIdColumn = Reflect.getMetadata(GRAPHQL_MODEL_FK_NAME, modelInstance, key);
+
+            fkFields.push({
+              key,
+              classType: fkTypeClass,
+              type: fkModelBasic,
+              resolve: (arg) => {
+                return resolveFunction(resolve(fkTypeClass, arg, key, fkIdColumn));
+              },
+            });
+          }
+        }
+
+        graphQLModelTypes[modelName] = new graphqlTypes.GraphQLObjectType({
+          name: type.name,
+          fields: () => {
+            let fields = { ...type.fields };
+
+            for (const fk of fkFields) {
+              fields[fk.key] = {
+                type: graphQLModelTypes[fk.type.name.toLowerCase()],
+                resolve: fk.resolve,
+              };
+            }
+
+            return fields;
+          },
+        });
+      }
+    }
+  }
+
+  return graphQLModelTypes;
+}
+
+/**
+ * create the graphQL models
+ * @param models
+ * @param resolveFunction
+ * @returns
+ */
+export function createGraphQLModels(models: any, resolveFunction: (model: any) => any) {
+  // create basic models
+  for (const model of models) {
+    getGraphQLModelBasic(new model());
+  }
+
+  // create graphQL objects and return them
+  return getGraphQLModels(models, resolveFunction);
+}
+
+/**
+ * create the graphQL input models
+ * @param models
+ * @returns
+ */
+export function createGraphQLInputModels(models: any) {
+  for (const model of Object.keys(models)) {
+    if (model && !graphQLInputModelTypes[models[model].name.toLowerCase()]) {
+      const fields = {};
+      const fkFields = [];
+
+      for (const key of Object.keys(models[model].getFields())) {
+        let type = null;
+
+        if (isGraphQLscalarType(models[model].getFields()[key].type)) {
+          type = models[model].getFields()[key].type;
+        } else {
+          fkFields.push({
+            key,
+            type: models[model].getFields()[key].type,
+          });
+        }
+
+        fields[key] = {
+          // type: new graphqlTypes.GraphQLNonNull(modelType.getFields()[key].type)
+          type,
+        };
+      }
+
+      graphQLInputModelTypes[
+        models[model].name.toLowerCase()
+      ] = new graphqlTypes.GraphQLInputObjectType({
+        name: `input${models[model].name}`,
+        fields: () => {
+          let modelFields = { ...fields };
+
+          for (const fk of fkFields) {
+            modelFields[fk.key] = {
+              type: graphQLInputModelTypes[fk.type.name.toLowerCase()],
+            };
+          }
+
+          return modelFields;
+        },
+      });
+    }
+  }
+
+  return graphQLInputModelTypes;
+}
+
+/**
+ * return the graphQL model based in an instance of the class
+ * @param instance
+ * @returns
+ */
+export function getGraphQLModel(instance: any) {
+  const name = Reflect.getMetadata(GRAPHQL_MODEL_ENTITY, instance);
+  return graphQLModelTypes[name.toLowerCase()];
+}
+
+/**
+ * return the graphQL model based in an instance of the class
+ * @param instance
+ * @returns
+ */
+export function getGraphQLInputModel(instance: any) {
+  const name = Reflect.getMetadata(GRAPHQL_MODEL_ENTITY, instance);
+  return graphQLInputModelTypes[name.toLowerCase()];
 }
