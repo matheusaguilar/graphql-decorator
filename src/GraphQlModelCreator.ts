@@ -223,7 +223,7 @@ export function createGraphQLInputModels(models: any) {
  */
 export function getGraphQLModel(instance: any) {
   const name = Reflect.getMetadata(GRAPHQL_MODEL_ENTITY, instance);
-  return graphQLModelTypes[name.toLowerCase()];
+  return name ? graphQLModelTypes[name.toLowerCase()] : null;
 }
 
 /**
@@ -233,5 +233,5 @@ export function getGraphQLModel(instance: any) {
  */
 export function getGraphQLInputModel(instance: any) {
   const name = Reflect.getMetadata(GRAPHQL_MODEL_ENTITY, instance);
-  return graphQLInputModelTypes[name.toLowerCase()];
+  return name ? graphQLInputModelTypes[name.toLowerCase()] : null;
 }
