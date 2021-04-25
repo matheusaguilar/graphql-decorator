@@ -1,6 +1,6 @@
 {
   "name": "@magn/graphql-decorator",
-  "version": "1.0.11",
+  "version": "1.0.13",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "description": "GraphQL Decorators to use with Typescript to create the schemas automatically.",
@@ -27,6 +27,7 @@
     "clean": "gulp",
     "build": "npm run clean && tsc",
     "lint": "npx eslint **/*.{ts} --quiet --no-error-on-unmatched-pattern --fix",
+    "pub": "npm run build && npm publish --access public",
     "commit": "git-cz",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

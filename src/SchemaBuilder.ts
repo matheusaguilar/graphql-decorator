@@ -5,6 +5,7 @@ import {
   GRAPHQL_RESOLVER_AUTH,
   GRAPHQL_RESOLVER_RETURN,
   GRAPHQL_RESOLVER_PARAM,
+  GRAPHQL_MODEL_ENTITY,
 } from './Decorators';
 import { getGraphQLBasicType } from './GraphQlType';
 import {
@@ -30,8 +31,16 @@ export class SchemaBuilder {
    */
   registerModels(models: (new () => any)[]) {
     // initialize all models
-    this.modelTypesResolver = createGraphQLModels(models, this.resolverModelFunction);
-    createGraphQLInputModels(this.modelTypesResolver);
+    const graphQLModels = createGraphQLModels(models, this.resolverModelFunction);
+    createGraphQLInputModels(graphQLModels);
+
+    // set all models
+    for (const model of models) {
+      const modelInstance = new model();
+      if (Reflect.hasMetadata(GRAPHQL_MODEL_ENTITY, modelInstance)) {
+        this.modelTypesResolver[model.name.toLowerCase()] = model;
+      }
+    }
 
     return this;
   }
