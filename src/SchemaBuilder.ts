@@ -30,8 +30,8 @@ export class SchemaBuilder {
    */
   registerModels(models: (new () => any)[]) {
     // initialize all models
-    const graphQLModels = createGraphQLModels(models, this.resolverModelFunction);
-    createGraphQLInputModels(graphQLModels);
+    this.modelTypesResolver = createGraphQLModels(models, this.resolverModelFunction);
+    createGraphQLInputModels(this.modelTypesResolver);
 
     return this;
   }
